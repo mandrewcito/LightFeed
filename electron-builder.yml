@@ -32,7 +32,3 @@ linux:
     - deb
   maintainer: mandrewcito
   category: Utility
-publish:
-  provider: github
-  owner: mandrewcito
-  repo: lightfeed
