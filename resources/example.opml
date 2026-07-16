@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<opml version="2.0">
+  <head>
+    <title>News Subscriptions</title>
+  </head>
+  <body>
+    <outline title="News" text="News">
+      <outline type="rss" text="BBC News - Home" title="BBC News - Home" xmlUrl="https://bbci.co.uk" />
+      <outline type="rss" text="Reuters: Top News" title="Reuters: Top News" xmlUrl="https://reuters.com" />
+    </outline>
+    <outline title="Technology" text="Technology">
+      <outline type="rss" text="Ars Technica" title="Ars Technica" xmlUrl="http://feeds.arstechnica.com/arstechnica/index" />
+      <outline type="rss" text="TechCrunch" title="TechCrunch" xmlUrl="https://techcrunch.com" />
+    </outline>
+  </body>
+</opml>
