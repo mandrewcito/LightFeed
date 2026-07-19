@@ -1,7 +1,9 @@
 import { useState, useEffect } from 'react'
 import { useFeedStore } from '../../stores/feed-store'
 import { useAppStore } from '../../stores/app-store'
+import { useArticleStore } from '../../stores/article-store'
 import { FeedTree } from '../feed/feed-tree'
+import { ContextMenu } from '../ui/context-menu'
 import {
   Rss,
   Plus,
@@ -9,7 +11,8 @@ import {
   PanelLeftClose,
   RefreshCw,
   Settings,
-  Trash2
+  Trash2,
+  Download
 } from 'lucide-react'
 
 export function Sidebar() {
@@ -26,6 +29,9 @@ export function Sidebar() {
   const showDeleteConfirm = useAppStore((s) => s.showDeleteConfirm)
   const setShowDeleteConfirm = useAppStore((s) => s.setShowDeleteConfirm)
   const [refreshing, setRefreshing] = useState(false)
+  const [allCtxMenu, setAllCtxMenu] = useState<{ x: number; y: number } | null>(null)
+  const [downloadingAll, setDownloadingAll] = useState<{ current: number; total: number } | null>(null)
+  const downloadAllContent = useArticleStore((s) => s.downloadAllContent)
 
   useEffect(() => {
     if (!showDeleteConfirm) return
@@ -47,6 +53,14 @@ export function Sidebar() {
     setRefreshing(true)
     await refreshAll()
     setRefreshing(false)
+  }
+
+  const handleDownloadAll = async () => {
+    setDownloadingAll({ current: 0, total: 0 })
+    await downloadAllContent((current, total) => {
+      setDownloadingAll({ current, total })
+    })
+    setDownloadingAll(null)
   }
 
   return (
@@ -85,6 +99,7 @@ export function Sidebar() {
       <div className="px-2 pb-2 space-y-0.5">
         <button
           onClick={selectAll}
+          onContextMenu={(e) => { e.preventDefault(); setAllCtxMenu({ x: e.clientX, y: e.clientY }) }}
           className={`w-full flex items-center gap-2 px-2 py-1.5 rounded text-sm text-left transition-colors ${
             selectedView === 'all'
               ? 'bg-zinc-200 dark:bg-zinc-700 text-zinc-900 dark:text-zinc-100'
@@ -97,6 +112,19 @@ export function Sidebar() {
             <span className="text-xs text-zinc-500 dark:text-zinc-400">{totalUnread}</span>
           )}
         </button>
+        {downloadingAll && downloadingAll.total > 0 && (
+          <div className="px-2 pt-1">
+            <div className="text-[10px] text-zinc-500 dark:text-zinc-400 mb-0.5">
+              Caching... {downloadingAll.current}/{downloadingAll.total} articles
+            </div>
+            <div className="w-full h-1 bg-zinc-200 dark:bg-zinc-700 rounded-full overflow-hidden">
+              <div
+                className="h-full bg-blue-500 transition-all duration-300"
+                style={{ width: `${(downloadingAll.current / downloadingAll.total) * 100}%` }}
+              />
+            </div>
+          </div>
+        )}
         <button
           onClick={selectStarred}
           className={`w-full flex items-center gap-2 px-2 py-1.5 rounded text-sm text-left transition-colors ${
@@ -178,6 +206,22 @@ export function Sidebar() {
           <span>Add Feed</span>
         </button>
       </div>
+
+      {/* All articles context menu */}
+      {allCtxMenu && (
+        <ContextMenu
+          x={allCtxMenu.x}
+          y={allCtxMenu.y}
+          onClose={() => setAllCtxMenu(null)}
+          items={[
+            {
+              icon: <Download size={14} />,
+              label: 'Download all news',
+              action: handleDownloadAll
+            }
+          ]}
+        />
+      )}
     </div>
   )
 }

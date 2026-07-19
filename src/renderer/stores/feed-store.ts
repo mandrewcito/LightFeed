@@ -1,5 +1,6 @@
 import { create } from 'zustand'
 import { api } from '../lib/ipc-client'
+import { useArticleStore } from './article-store'
 import type { FeedWithCategory, Category } from '../types'
 
 interface FeedState {
@@ -75,6 +76,7 @@ export const useFeedStore = create<FeedState>((set, get) => ({
   },
 
   removeFeed: async (feedId: string) => {
+    useArticleStore.getState().clearCacheForFeed(feedId)
     await api.removeFeed(feedId)
     await get().loadFeeds()
     await get().loadUnreadCounts()
@@ -82,6 +84,7 @@ export const useFeedStore = create<FeedState>((set, get) => ({
 
   removeMultipleFeeds: async (feedIds: string[]) => {
     for (const feedId of feedIds) {
+      useArticleStore.getState().clearCacheForFeed(feedId)
       await api.removeFeed(feedId)
     }
     set({ multiSelectedFeedIds: [] })

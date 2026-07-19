@@ -1,8 +1,11 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useArticleStore } from '../../stores/article-store'
 import { useFeedStore } from '../../stores/feed-store'
 import { ArticleCard } from './article-card'
+import { ContextMenu } from '../ui/context-menu'
 import { useAppStore } from '../../stores/app-store'
+import { RefreshCw } from 'lucide-react'
+import type { EntryWithFeed } from '../../types'
 
 export function ArticleList() {
   const entries = useArticleStore((s) => s.entries)
@@ -11,12 +14,38 @@ export function ArticleList() {
   const loadEntries = useArticleStore((s) => s.loadEntries)
   const loadMore = useArticleStore((s) => s.loadMore)
   const hasMore = useArticleStore((s) => s.hasMore)
+  const clearCacheForEntry = useArticleStore((s) => s.clearCacheForEntry)
+  const selectEntry = useArticleStore((s) => s.selectEntry)
   const viewMode = useAppStore((s) => s.viewMode)
   const searchQuery = useAppStore((s) => s.searchQuery)
   const scrollRef = useRef<HTMLDivElement>(null)
   const selectedView = useFeedStore((s) => s.selectedView)
   const selectedFeedId = useFeedStore((s) => s.selectedFeedId)
   const selectedCategoryId = useFeedStore((s) => s.selectedCategoryId)
+
+  const [contextMenu, setContextMenu] = useState<{
+    x: number
+    y: number
+    entry: EntryWithFeed
+  } | null>(null)
+
+  const handleArticleContextMenu = (e: React.MouseEvent, entry: EntryWithFeed) => {
+    e.preventDefault()
+    setContextMenu({ x: e.clientX, y: e.clientY, entry })
+  }
+
+  const contextMenuItems = contextMenu
+    ? [
+        {
+          label: 'Reload content',
+          icon: <RefreshCw size={14} />,
+          action: () => {
+            clearCacheForEntry(contextMenu.entry.id)
+            selectEntry(contextMenu.entry.id)
+          }
+        }
+      ]
+    : []
 
   // Reload entries when view changes
   useEffect(() => {
@@ -59,6 +88,7 @@ export function ArticleList() {
             entry={entry}
             isSelected={selectedEntryId === entry.id}
             viewMode={viewMode}
+            onContextMenu={handleArticleContextMenu}
           />
         ))}
       </div>
@@ -74,6 +104,14 @@ export function ArticleList() {
             Load more
           </button>
         </div>
+      )}
+      {contextMenu && (
+        <ContextMenu
+          x={contextMenu.x}
+          y={contextMenu.y}
+          items={contextMenuItems}
+          onClose={() => setContextMenu(null)}
+        />
       )}
     </div>
   )

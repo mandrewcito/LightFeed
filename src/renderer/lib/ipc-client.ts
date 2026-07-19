@@ -83,6 +83,12 @@ export const api = {
   fetchArticleContent: (url: string) =>
     invoke<string>('fetch_article_content_cmd', { url }),
 
+  saveEntryContent: (entryId: string, content: string) =>
+    invoke<void>('save_entry_content', { entryId, content }),
+
+  getEntryContent: (entryId: string) =>
+    invoke<string | null>('get_entry_content', { entryId }),
+
   // OPML
 
   exportOPML: () =>
@@ -122,6 +128,9 @@ export const api = {
 
   getCurrentDbPath: () =>
     invoke<string>('get_current_db_path'),
+
+  getDbSize: () =>
+    invoke<number>('get_db_size'),
 
   getDefaultDbPath: () =>
     invoke<string>('get_default_db_path'),

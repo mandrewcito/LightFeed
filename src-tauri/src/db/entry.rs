@@ -205,6 +205,15 @@ pub fn set_readable_content(conn: &Connection, entry_id_val: &str, content: &str
     Ok(())
 }
 
+pub fn get_readable_content(conn: &Connection, entry_id_val: &str) -> Result<Option<String>> {
+    let mut stmt = conn.prepare("SELECT readable_content FROM entries WHERE id = ?1")?;
+    let mut rows = stmt.query_map(params![entry_id_val], |row| row.get::<_, Option<String>>(0))?;
+    match rows.next() {
+        Some(row) => Ok(row?),
+        None => Ok(None),
+    }
+}
+
 pub fn delete_entries_older_than(conn: &Connection, days: i64) -> Result<usize> {
     let now = chrono::Utc::now().timestamp();
     let cutoff = now - (days * 86400);

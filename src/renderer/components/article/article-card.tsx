@@ -7,9 +7,10 @@ interface ArticleCardProps {
   entry: EntryWithFeed
   isSelected: boolean
   viewMode: 'cards' | 'list' | 'compact'
+  onContextMenu?: (e: React.MouseEvent, entry: EntryWithFeed) => void
 }
 
-export function ArticleCard({ entry, isSelected, viewMode }: ArticleCardProps) {
+export function ArticleCard({ entry, isSelected, viewMode, onContextMenu }: ArticleCardProps) {
   const selectEntry = useArticleStore((s) => s.selectEntry)
 
   const snippet = entry.content ? truncate(stripHtml(entry.content), viewMode === 'compact' ? 80 : 150) : ''
@@ -18,6 +19,7 @@ export function ArticleCard({ entry, isSelected, viewMode }: ArticleCardProps) {
     return (
       <div
         onClick={() => selectEntry(entry.id)}
+        onContextMenu={(e) => onContextMenu?.(e, entry)}
         className={`flex items-center gap-3 px-3 py-2 cursor-pointer transition-colors ${
           isSelected
             ? 'bg-blue-50 dark:bg-blue-900/20 border-l-2 border-blue-500'
@@ -48,6 +50,7 @@ export function ArticleCard({ entry, isSelected, viewMode }: ArticleCardProps) {
     return (
       <div
         onClick={() => selectEntry(entry.id)}
+        onContextMenu={(e) => onContextMenu?.(e, entry)}
         className={`flex gap-3 px-3 py-2.5 cursor-pointer transition-colors ${
           isSelected
             ? 'bg-blue-50 dark:bg-blue-900/20 border-l-2 border-blue-500'
@@ -92,6 +95,7 @@ export function ArticleCard({ entry, isSelected, viewMode }: ArticleCardProps) {
   return (
     <div
       onClick={() => selectEntry(entry.id)}
+      onContextMenu={(e) => onContextMenu?.(e, entry)}
       className={`flex gap-3 p-3 rounded-lg cursor-pointer transition-all ${
         isSelected
           ? 'bg-blue-50 dark:bg-blue-900/20 ring-1 ring-blue-500/30'

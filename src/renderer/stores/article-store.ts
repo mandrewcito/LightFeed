@@ -15,16 +15,21 @@ interface ArticleState {
   hasMore: boolean
   fullContent: string | null
   loadingContent: boolean
+  contentCache: Map<string, string>
 
   loadEntries: (reset?: boolean) => Promise<void>
   selectEntry: (entryId: string) => Promise<void>
   clearSelection: () => void
+  clearCacheForFeed: (feedId: string) => void
+  clearCacheForEntry: (entryId: string) => void
   markRead: (entryId: string) => Promise<void>
   markAllRead: (feedId?: string, categoryId?: string) => Promise<void>
   toggleStar: (entryId: string) => Promise<void>
   loadMore: () => Promise<void>
   navigateNext: () => void
   navigatePrev: () => void
+  downloadFeedContent: (feedId: string, onProgress?: (current: number, total: number) => void) => Promise<void>
+  downloadAllContent: (onProgress?: (current: number, total: number) => void) => Promise<void>
 }
 
 export const useArticleStore = create<ArticleState>((set, get) => ({
@@ -37,6 +42,7 @@ export const useArticleStore = create<ArticleState>((set, get) => ({
   hasMore: true,
   fullContent: null,
   loadingContent: false,
+  contentCache: new Map(),
 
   loadEntries: async (reset = true) => {
     const { offset } = get()
@@ -94,11 +100,34 @@ export const useArticleStore = create<ArticleState>((set, get) => ({
 
     // Fetch full content if URL exists (skip for YouTube - handled by reader)
     if (entry?.url && !isYouTubeUrl(entry.url)) {
-      try {
-        const content = await api.fetchArticleContent(entry.url)
-        set({ fullContent: content, loadingContent: false })
-      } catch {
-        set({ fullContent: entry.content || '', loadingContent: false })
+      // Check in-memory cache first
+      const cached = get().contentCache.get(entry.url)
+      if (cached) {
+        set({ fullContent: cached, loadingContent: false })
+      } else {
+        // Check DB cache
+        try {
+          const dbContent = await api.getEntryContent(entryId)
+          if (dbContent) {
+            set((state) => {
+              const newCache = new Map(state.contentCache)
+              newCache.set(entry.url!, dbContent)
+              return { fullContent: dbContent, loadingContent: false, contentCache: newCache }
+            })
+          } else {
+            // Fetch from network
+            const content = await api.fetchArticleContent(entry.url)
+            // Save to DB
+            api.saveEntryContent(entryId, content).catch(() => {})
+            set((state) => {
+              const newCache = new Map(state.contentCache)
+              newCache.set(entry.url!, content)
+              return { fullContent: content, loadingContent: false, contentCache: newCache }
+            })
+          }
+        } catch {
+          set({ fullContent: entry.content || '', loadingContent: false })
+        }
       }
     } else {
       set({ fullContent: entry?.content || '', loadingContent: false })
@@ -107,6 +136,29 @@ export const useArticleStore = create<ArticleState>((set, get) => ({
 
   clearSelection: () => {
     set({ selectedEntryId: null, selectedEntry: null, fullContent: null })
+  },
+
+  clearCacheForFeed: (feedId: string) => {
+    const { entries, contentCache } = get()
+    const feedEntryUrls = entries
+      .filter((e) => e.feed_id === feedId)
+      .map((e) => e.url)
+      .filter((url): url is string => !!url)
+    if (feedEntryUrls.length === 0) return
+    const newCache = new Map(contentCache)
+    for (const url of feedEntryUrls) {
+      newCache.delete(url)
+    }
+    set({ contentCache: newCache })
+  },
+
+  clearCacheForEntry: (entryId: string) => {
+    const { entries, contentCache } = get()
+    const entry = entries.find((e) => e.id === entryId)
+    if (!entry?.url) return
+    const newCache = new Map(contentCache)
+    newCache.delete(entry.url)
+    set({ contentCache: newCache })
   },
 
   markRead: async (entryId: string) => {
@@ -158,6 +210,78 @@ export const useArticleStore = create<ArticleState>((set, get) => ({
     const idx = entries.findIndex((e) => e.id === selectedEntryId)
     if (idx > 0) {
       get().selectEntry(entries[idx - 1].id)
+    }
+  },
+
+  downloadFeedContent: async (feedId, onProgress) => {
+    const results = await api.getEntries({ feed_id: feedId, limit: 99999 })
+    const total = results.length
+    let current = 0
+
+    for (const entry of results) {
+      if (isYouTubeUrl(entry.url)) {
+        current++
+        onProgress?.(current, total)
+        continue
+      }
+
+      // Check DB cache
+      const dbContent = await api.getEntryContent(entry.id)
+      if (!dbContent && entry.url) {
+        // Fetch from network and save
+        try {
+          const content = await api.fetchArticleContent(entry.url)
+          await api.saveEntryContent(entry.id, content)
+          // Also cache in memory
+          const newCache = new Map(get().contentCache)
+          newCache.set(entry.url, content)
+          set({ contentCache: newCache })
+        } catch {
+          // Skip failed entries
+        }
+      }
+
+      current++
+      onProgress?.(current, total)
+    }
+  },
+
+  downloadAllContent: async (onProgress) => {
+    const feeds = useFeedStore.getState().feeds
+    // Get total count across all feeds
+    let totalAll = 0
+    const feedEntries: { feedId: string; entries: EntryWithFeed[] }[] = []
+    for (const feed of feeds) {
+      const entries = await api.getEntries({ feed_id: feed.feed_id, limit: 99999 })
+      feedEntries.push({ feedId: feed.feed_id, entries })
+      totalAll += entries.length
+    }
+
+    let currentAll = 0
+    for (const { entries } of feedEntries) {
+      for (const entry of entries) {
+        if (isYouTubeUrl(entry.url)) {
+          currentAll++
+          onProgress?.(currentAll, totalAll)
+          continue
+        }
+
+        const dbContent = await api.getEntryContent(entry.id)
+        if (!dbContent && entry.url) {
+          try {
+            const content = await api.fetchArticleContent(entry.url)
+            await api.saveEntryContent(entry.id, content)
+            const newCache = new Map(get().contentCache)
+            newCache.set(entry.url, content)
+            set({ contentCache: newCache })
+          } catch {
+            // Skip failed entries
+          }
+        }
+
+        currentAll++
+        onProgress?.(currentAll, totalAll)
+      }
     }
   }
 }))

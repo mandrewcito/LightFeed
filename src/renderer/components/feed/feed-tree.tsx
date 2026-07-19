@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { useFeedStore } from '../../stores/feed-store'
 import { useAppStore } from '../../stores/app-store'
 import { FeedItem } from './feed-item'
-import { ChevronRight, ChevronDown, FolderOpen, Folder, Plus, Trash2, Pencil, Copy } from 'lucide-react'
+import { ChevronRight, ChevronDown, FolderOpen, Folder, Plus, Trash2, Pencil, Copy, Download } from 'lucide-react'
 import { ContextMenu } from '../ui/context-menu'
 import { useArticleStore } from '../../stores/article-store'
 import type { FeedWithCategory } from '../../types'
@@ -39,6 +39,7 @@ export function FeedTree() {
   const [dragOverCategoryId, setDragOverCategoryId] = useState<string | null>(null)
   const [dragOverUncategorized, setDragOverUncategorized] = useState(false)
   const [contextMenu, setContextMenu] = useState<{ x: number; y: number; feed: FeedWithCategory } | null>(null)
+  const [downloadingFeed, setDownloadingFeed] = useState<{ feedId: string; current: number; total: number } | null>(null)
 
   const toggleCategory = (id: string) => {
     toggleCategoryExpand(id)
@@ -138,6 +139,16 @@ export function FeedTree() {
     }
   }
 
+  const handleDownloadNews = async (feed: FeedWithCategory) => {
+    if (downloadingFeed) return
+    const downloadFeedContent = useArticleStore.getState().downloadFeedContent
+    setDownloadingFeed({ feedId: feed.id, current: 0, total: 0 })
+    await downloadFeedContent(feed.id, (current, total) => {
+      setDownloadingFeed((prev) => prev ? { ...prev, current, total } : null)
+    })
+    setDownloadingFeed(null)
+  }
+
   const handleRenameSubmit = async (subscriptionId: string, title: string | null) => {
     await renameFeed(subscriptionId, title)
     setEditingFeedId(null)
@@ -155,6 +166,11 @@ export function FeedTree() {
       label: 'Copy link',
       icon: <Copy size={14} />,
       action: () => handleCopyLink(contextMenu.feed.url),
+    },
+    {
+      label: 'Download news',
+      icon: <Download size={14} />,
+      action: () => handleDownloadNews(contextMenu.feed),
     },
     {
       label: 'Delete',
@@ -257,19 +273,34 @@ export function FeedTree() {
             {isExpanded && (
               <div className="ml-4">
                 {catFeeds.map((feed) => (
-                  <FeedItem
-                    key={feed.id}
-                    feed={feed}
-                    unreadCount={unreadCounts[feed.id] || 0}
-                    isSelected={selectedFeedId === feed.id}
-                    isMultiSelected={multiSelectedFeedIds.includes(feed.id)}
-                    isEditing={editingFeedId === feed.subscription_id}
-                    onSelect={() => selectFeed(feed.id)}
-                    onMultiSelect={() => toggleSelectFeed(feed.id)}
-                    onRemove={() => removeFeed(feed.id)}
-                    onContextMenu={(e) => handleFeedContextMenu(e, feed)}
-                    onRenameSubmit={(title) => handleRenameSubmit(feed.subscription_id, title)}
-                  />
+                  <div key={feed.id}>
+                    <FeedItem
+                      feed={feed}
+                      unreadCount={unreadCounts[feed.id] || 0}
+                      isSelected={selectedFeedId === feed.id}
+                      isMultiSelected={multiSelectedFeedIds.includes(feed.id)}
+                      isEditing={editingFeedId === feed.subscription_id}
+                      onSelect={() => selectFeed(feed.id)}
+                      onMultiSelect={() => toggleSelectFeed(feed.id)}
+                      onRemove={() => removeFeed(feed.id)}
+                      onContextMenu={(e) => handleFeedContextMenu(e, feed)}
+                      onRenameSubmit={(title) => handleRenameSubmit(feed.subscription_id, title)}
+                    />
+                    {downloadingFeed && downloadingFeed.feedId === feed.id && downloadingFeed.total > 0 && (
+                      <div className="px-2 py-1">
+                        <div className="flex items-center justify-between text-[10px] text-zinc-500 dark:text-zinc-400 mb-0.5">
+                          <span>Caching...</span>
+                          <span>{downloadingFeed.current}/{downloadingFeed.total}</span>
+                        </div>
+                        <div className="h-1 bg-zinc-200 dark:bg-zinc-700 rounded-full overflow-hidden">
+                          <div
+                            className="h-full bg-blue-500 transition-all duration-300"
+                            style={{ width: `${(downloadingFeed.current / downloadingFeed.total) * 100}%` }}
+                          />
+                        </div>
+                      </div>
+                    )}
+                  </div>
                 ))}
               </div>
             )}
@@ -289,19 +320,34 @@ export function FeedTree() {
         }`}
       >
         {uncategorizedFeeds.map((feed) => (
-          <FeedItem
-            key={feed.id}
-            feed={feed}
-            unreadCount={unreadCounts[feed.id] || 0}
-            isSelected={selectedFeedId === feed.id}
-            isMultiSelected={multiSelectedFeedIds.includes(feed.id)}
-            isEditing={editingFeedId === feed.subscription_id}
-            onSelect={() => selectFeed(feed.id)}
-            onMultiSelect={() => toggleSelectFeed(feed.id)}
-            onRemove={() => removeFeed(feed.id)}
-            onContextMenu={(e) => handleFeedContextMenu(e, feed)}
-            onRenameSubmit={(title) => handleRenameSubmit(feed.subscription_id, title)}
-          />
+          <div key={feed.id}>
+            <FeedItem
+              feed={feed}
+              unreadCount={unreadCounts[feed.id] || 0}
+              isSelected={selectedFeedId === feed.id}
+              isMultiSelected={multiSelectedFeedIds.includes(feed.id)}
+              isEditing={editingFeedId === feed.subscription_id}
+              onSelect={() => selectFeed(feed.id)}
+              onMultiSelect={() => toggleSelectFeed(feed.id)}
+              onRemove={() => removeFeed(feed.id)}
+              onContextMenu={(e) => handleFeedContextMenu(e, feed)}
+              onRenameSubmit={(title) => handleRenameSubmit(feed.subscription_id, title)}
+            />
+                    {downloadingFeed?.feedId === feed.id && downloadingFeed.total > 0 && (
+              <div className="px-2 py-1">
+                <div className="flex items-center justify-between text-[10px] text-zinc-500 dark:text-zinc-400 mb-0.5">
+                  <span>Caching...</span>
+                  <span>{downloadingFeed.current}/{downloadingFeed.total}</span>
+                </div>
+                <div className="h-1 bg-zinc-200 dark:bg-zinc-700 rounded-full overflow-hidden">
+                  <div
+                    className="h-full bg-blue-500 transition-all duration-300"
+                    style={{ width: `${(downloadingFeed.current / downloadingFeed.total) * 100}%` }}
+                  />
+                </div>
+              </div>
+            )}
+          </div>
         ))}
       </div>
 

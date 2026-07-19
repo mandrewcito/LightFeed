@@ -11,9 +11,17 @@ export function StorageTab() {
   const [cleanupDays, setCleanupDays] = useState(30)
   const [cleaning, setCleaning] = useState(false)
   const [cleanupResult, setCleanupResult] = useState('')
+  const [dbSize, setDbSize] = useState<number | null>(null)
+  const [dbSizeError, setDbSizeError] = useState(false)
 
   useEffect(() => {
     api.getCurrentDbPath().then(setCurrentPath).catch(() => {})
+    api.getDbSize()
+      .then(setDbSize)
+      .catch((err) => {
+        console.error('getDbSize failed:', err)
+        setDbSizeError(true)
+      })
     api.getSetting('cleanup_older_than_days').then((val) => {
       if (val) {
         const n = parseInt(val, 10)
@@ -98,6 +106,13 @@ export function StorageTab() {
     }
   }
 
+  const formatBytes = (bytes: number) => {
+    if (bytes < 1024) return `${bytes} B`
+    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`
+    if (bytes < 1024 * 1024 * 1024) return `${(bytes / (1024 * 1024)).toFixed(1)} MB`
+    return `${(bytes / (1024 * 1024 * 1024)).toFixed(2)} GB`
+  }
+
   return (
     <div className="space-y-6">
       <div>
@@ -126,8 +141,11 @@ export function StorageTab() {
 
       <div className="border-t border-zinc-200 dark:border-zinc-700 pt-4">
         <h3 className="text-sm font-medium mb-2">Data Cleanup</h3>
-        <p className="text-xs text-zinc-500 dark:text-zinc-400 mb-3">
+        <p className="text-xs text-zinc-500 dark:text-zinc-400 mb-1">
           Automatically remove old entries to save disk space.
+        </p>
+        <p className="text-xs text-zinc-500 dark:text-zinc-400 mb-3">
+          Total disk usage: {dbSize !== null ? formatBytes(dbSize) : dbSizeError ? 'Unknown' : 'Loading...'}
         </p>
 
         <label className="flex items-center gap-2 mb-3">

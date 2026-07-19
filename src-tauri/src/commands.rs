@@ -268,6 +268,19 @@ pub async fn fetch_article_content_cmd(url: String) -> Result<String, String> {
     fetch_article_content(&url).await
 }
 
+#[tauri::command]
+pub fn save_entry_content(state: State<'_, DbState>, entry_id: String, content: String) -> Result<(), String> {
+    let db = state.0.lock().map_err(|e| e.to_string())?;
+    db_entry::set_readable_content(&db, &entry_id, &content).map_err(|e| e.to_string())?;
+    Ok(())
+}
+
+#[tauri::command]
+pub fn get_entry_content(state: State<'_, DbState>, entry_id: String) -> Result<Option<String>, String> {
+    let db = state.0.lock().map_err(|e| e.to_string())?;
+    db_entry::get_readable_content(&db, &entry_id).map_err(|e| e.to_string())
+}
+
 // --- OPML ---
 
 #[tauri::command]
@@ -353,6 +366,16 @@ pub fn is_dev() -> bool {
 #[tauri::command]
 pub fn get_current_db_path(_state: State<'_, DbState>) -> Result<String, String> {
     Ok(get_default_db_path())
+}
+
+#[tauri::command]
+pub fn get_db_size(state: State<'_, DbState>) -> Result<u64, String> {
+    let db = state.0.lock().map_err(|e| e.to_string())?;
+    let path: String = db.query_row("PRAGMA database_list", [], |row| row.get(2))
+        .map_err(|e| e.to_string())?;
+    std::fs::metadata(&path)
+        .map(|m| m.len())
+        .map_err(|e| e.to_string())
 }
 
 #[tauri::command]
