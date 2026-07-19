@@ -1,0 +1,92 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#18181b"/>
+      <stop offset="100%" style="stop-color:#27272a"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="1200" height="630" fill="url(#bg)"/>
+
+  <!-- Title -->
+  <text x="80" y="120" font-family="system-ui, -apple-system, sans-serif" font-size="56" font-weight="700" fill="#fafafa">Keyboard Shortcuts</text>
+  <text x="80" y="165" font-family="system-ui, -apple-system, sans-serif" font-size="22" fill="#a1a1aa">Navigate without touching the mouse</text>
+
+  <!-- Keyboard icon -->
+  <g transform="translate(980, 60)" fill="none" stroke="#3f3f46" stroke-width="2">
+    <rect width="140" height="50" rx="6"/>
+    <rect x="10" y="10" width="20" height="12" rx="2" fill="#27272a"/>
+    <rect x="36" y="10" width="20" height="12" rx="2" fill="#27272a"/>
+    <rect x="62" y="10" width="20" height="12" rx="2" fill="#27272a"/>
+    <rect x="88" y="10" width="20" height="12" rx="2" fill="#27272a"/>
+    <rect x="10" y="28" width="120" height="12" rx="2" fill="#27272a"/>
+  </g>
+
+  <!-- Shortcuts grid -->
+  <g font-family="system-ui, -apple-system, sans-serif" font-size="16">
+    <!-- Column 1 -->
+    <g transform="translate(80, 220)">
+      <rect width="80" height="32" rx="6" fill="#27272a" stroke="#3f3f46" stroke-width="1"/>
+      <text x="40" y="22" text-anchor="middle" font-family="ui-monospace, monospace" font-size="14" fill="#d4d4d8">j / &#x2193;</text>
+      <text x="96" y="22" fill="#a1a1aa">Next article</text>
+    </g>
+    <g transform="translate(80, 270)">
+      <rect width="80" height="32" rx="6" fill="#27272a" stroke="#3f3f46" stroke-width="1"/>
+      <text x="40" y="22" text-anchor="middle" font-family="ui-monospace, monospace" font-size="14" fill="#d4d4d8">k / &#x2191;</text>
+      <text x="96" y="22" fill="#a1a1aa">Previous article</text>
+    </g>
+    <g transform="translate(80, 320)">
+      <rect width="80" height="32" rx="6" fill="#27272a" stroke="#3f3f46" stroke-width="1"/>
+      <text x="40" y="22" text-anchor="middle" font-family="ui-monospace, monospace" font-size="14" fill="#d4d4d8">m</text>
+      <text x="96" y="22" fill="#a1a1aa">Mark as read</text>
+    </g>
+    <g transform="translate(80, 370)">
+      <rect width="80" height="32" rx="6" fill="#27272a" stroke="#3f3f46" stroke-width="1"/>
+      <text x="40" y="22" text-anchor="middle" font-family="ui-monospace, monospace" font-size="14" fill="#d4d4d8">s</text>
+      <text x="96" y="22" fill="#a1a1aa">Toggle star</text>
+    </g>
+
+    <!-- Column 2 -->
+    <g transform="translate(400, 220)">
+      <rect width="80" height="32" rx="6" fill="#27272a" stroke="#3f3f46" stroke-width="1"/>
+      <text x="40" y="22" text-anchor="middle" font-family="ui-monospace, monospace" font-size="14" fill="#d4d4d8">r</text>
+      <text x="96" y="22" fill="#a1a1aa">Refresh all feeds</text>
+    </g>
+    <g transform="translate(400, 270)">
+      <rect width="80" height="32" rx="6" fill="#27272a" stroke="#3f3f46" stroke-width="1"/>
+      <text x="40" y="22" text-anchor="middle" font-family="ui-monospace, monospace" font-size="14" fill="#d4d4d8">a</text>
+      <text x="96" y="22" fill="#a1a1aa">Add new feed</text>
+    </g>
+    <g transform="translate(400, 320)">
+      <rect width="80" height="32" rx="6" fill="#27272a" stroke="#3f3f46" stroke-width="1"/>
+      <text x="40" y="22" text-anchor="middle" font-family="ui-monospace, monospace" font-size="14" fill="#d4d4d8">/</text>
+      <text x="96" y="22" fill="#a1a1aa">Focus search</text>
+    </g>
+    <g transform="translate(400, 370)">
+      <rect width="80" height="32" rx="6" fill="#27272a" stroke="#3f3f46" stroke-width="1"/>
+      <text x="40" y="22" text-anchor="middle" font-family="ui-monospace, monospace" font-size="14" fill="#d4d4d8">b</text>
+      <text x="96" y="22" fill="#a1a1aa">Toggle sidebar</text>
+    </g>
+
+    <!-- Column 3 -->
+    <g transform="translate(720, 220)">
+      <rect width="80" height="32" rx="6" fill="#27272a" stroke="#3f3f46" stroke-width="1"/>
+      <text x="40" y="22" text-anchor="middle" font-family="ui-monospace, monospace" font-size="14" fill="#d4d4d8">F2</text>
+      <text x="96" y="22" fill="#a1a1aa">Rename feed/category</text>
+    </g>
+    <g transform="translate(720, 270)">
+      <rect width="110" height="32" rx="6" fill="#27272a" stroke="#3f3f46" stroke-width="1"/>
+      <text x="55" y="22" text-anchor="middle" font-family="ui-monospace, monospace" font-size="14" fill="#d4d4d8">Ctrl+Shift+F</text>
+      <text x="126" y="22" fill="#a1a1aa">Fuzzy finder</text>
+    </g>
+    <g transform="translate(720, 320)">
+      <rect width="80" height="32" rx="6" fill="#27272a" stroke="#3f3f46" stroke-width="1"/>
+      <text x="40" y="22" text-anchor="middle" font-family="ui-monospace, monospace" font-size="14" fill="#d4d4d8">Del</text>
+      <text x="96" y="22" fill="#a1a1aa">Delete selected feeds</text>
+    </g>
+  </g>
+
+  <!-- Bottom accent -->
+  <line x1="80" y1="520" x2="1120" y2="520" stroke="#3f3f46" stroke-width="1"/>
+  <text x="600" y="560" text-anchor="middle" font-family="ui-monospace, monospace" font-size="14" fill="#52525b">vi-style navigation &#x2022; vim users feel at home</text>
+</svg>

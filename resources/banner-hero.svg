@@ -1,0 +1,61 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#18181b"/>
+      <stop offset="100%" style="stop-color:#27272a"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="1200" height="630" fill="url(#bg)"/>
+
+  <!-- Decorative dots -->
+  <g fill="#3f3f46" opacity="0.3">
+    <circle cx="50" cy="50" r="2"/>
+    <circle cx="80" cy="50" r="2"/>
+    <circle cx="110" cy="50" r="2"/>
+    <circle cx="50" cy="80" r="2"/>
+    <circle cx="80" cy="80" r="2"/>
+    <circle cx="110" cy="80" r="2"/>
+    <circle cx="50" cy="110" r="2"/>
+    <circle cx="80" cy="110" r="2"/>
+    <circle cx="110" cy="110" r="2"/>
+    <circle cx="1090" cy="520" r="2"/>
+    <circle cx="1120" cy="520" r="2"/>
+    <circle cx="1150" cy="520" r="2"/>
+    <circle cx="1090" cy="550" r="2"/>
+    <circle cx="1120" cy="550" r="2"/>
+    <circle cx="1150" cy="550" r="2"/>
+    <circle cx="1090" cy="580" r="2"/>
+    <circle cx="1120" cy="580" r="2"/>
+    <circle cx="1150" cy="580" r="2"/>
+  </g>
+
+  <!-- RSS icon -->
+  <g transform="translate(560, 120)" fill="none">
+    <circle cx="40" cy="40" r="38" stroke="#a1a1aa" stroke-width="2"/>
+    <circle cx="40" cy="40" r="8" fill="#a1a1aa"/>
+    <path d="M20 40 A20 20 0 0 1 40 20" stroke="#a1a1aa" stroke-width="4" stroke-linecap="round" fill="none"/>
+    <path d="M10 40 A30 30 0 0 1 40 10" stroke="#a1a1aa" stroke-width="4" stroke-linecap="round" fill="none"/>
+  </g>
+
+  <!-- Title -->
+  <text x="600" y="220" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="72" font-weight="700" fill="#fafafa">LightFeed</text>
+
+  <!-- Tagline -->
+  <text x="600" y="270" text-anchor="middle" font-family="ui-monospace, monospace" font-size="24" fill="#a1a1aa">A plain RSS reader</text>
+
+  <!-- Divider -->
+  <line x1="500" y1="310" x2="700" y2="310" stroke="#3f3f46" stroke-width="1"/>
+
+  <!-- Features -->
+  <g font-family="system-ui, -apple-system, sans-serif" font-size="18" fill="#d4d4d8">
+    <text x="600" y="360" text-anchor="middle">Fuzzy finder</text>
+    <text x="600" y="395" text-anchor="middle">Keyboard-driven navigation</text>
+    <text x="600" y="430" text-anchor="middle">Dark mode</text>
+    <text x="600" y="465" text-anchor="middle">Cloud sync</text>
+    <text x="600" y="500" text-anchor="middle">OPML import/export</text>
+  </g>
+
+  <!-- Bottom tag -->
+  <text x="600" y="590" text-anchor="middle" font-family="ui-monospace, monospace" font-size="14" fill="#52525b">Tauri + React + Rust</text>
+</svg>

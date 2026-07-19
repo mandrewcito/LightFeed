@@ -2,6 +2,8 @@
 
 A plain RSS reader built with Tauri.
 
+![LightFeed](resources/banner-hero.svg)
+
 ## Features
 
 - RSS/Atom feed subscription and management
@@ -24,6 +26,8 @@ Press `Ctrl+Shift+F` to open the fuzzy finder. Search through all your feeds and
 - Arrow keys to navigate, Enter to select, Escape to close
 - Selecting a feed opens it; selecting an article loads it in the reader
 
+![Fuzzy Finder](resources/banner-fuzzy-finder.svg)
+
 ## Cloud Sync
 
 LightFeed stores everything in a single SQLite database file. To sync across devices:
@@ -33,6 +37,8 @@ LightFeed stores everything in a single SQLite database file. To sync across dev
 3. Repeat on each device, choosing **Use Existing** when prompted
 
 All feeds, subscriptions, read states, and stars stay in sync automatically.
+
+![Cloud Sync](resources/banner-sync.svg)
 
 ## OPML
 
@@ -60,6 +66,12 @@ Example file (`resources/example.opml`):
 ```
 
 Feeds can be organized into categories using `<outline>` groups. Import via Settings → Import/Export.
+
+## Keyboard Shortcuts
+
+![Keyboard Shortcuts](resources/banner-keyboard.svg)
+
+LightFeed uses vi-style navigation. See the sidebar for all available shortcuts.
 
 ## Tech Stack
 
