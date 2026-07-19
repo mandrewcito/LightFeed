@@ -73,7 +73,10 @@ impl FeedService {
                 crate::db::models::ParsedItem {
                     title: entry.title.as_ref().map(|t| t.content.clone()),
                     url: entry_url,
-                    content: entry.content.as_ref().and_then(|c| c.body.clone()),
+                    content: entry.content
+                        .as_ref()
+                        .and_then(|c| c.body.clone())
+                        .or_else(|| entry.media.iter().find_map(|m| m.description.as_ref().map(|d| d.content.clone()))),
                     author: entry.authors.first().map(|a| a.name.clone()),
                     published_at,
                     thumbnail,
@@ -95,7 +98,14 @@ impl FeedService {
         url: &str,
         category_id: Option<&str>,
     ) -> Result<String, String> {
-        let parsed = self.fetch_feed(url).await?;
+        // Resolve YouTube URLs to RSS feed URLs
+        let feed_url = if is_youtube_url(url) {
+            resolve_youtube_url(&self.client, url).await?
+        } else {
+            url.to_string()
+        };
+
+        let parsed = self.fetch_feed(&feed_url).await?;
 
         let site_url = parsed.site_url.as_deref().unwrap_or("");
         let favicon_url = get_favicon_url(site_url);
@@ -104,7 +114,7 @@ impl FeedService {
             let db = conn.lock().map_err(|e| e.to_string())?;
             db_feed::upsert_feed(
                 &db,
-                url,
+                &feed_url,
                 parsed.title.as_deref(),
                 parsed.description.as_deref(),
                 Some(site_url),
@@ -211,6 +221,81 @@ fn get_favicon_url(site_url: &str) -> String {
         "https://www.google.com/s2/favicons?domain={}&sz=32",
         site_url
     )
+}
+
+fn is_youtube_url(url: &str) -> bool {
+    url.contains("youtube.com/@")
+        || url.contains("youtube.com/channel/")
+        || url.contains("youtube.com/c/")
+        || url.contains("youtube.com/user/")
+}
+
+fn extract_channel_id_from_html(html: &str) -> Option<String> {
+    // Try canonical link first: <link rel="canonical" href="https://www.youtube.com/channel/UCxxxx">
+    let re_canonical = regex::Regex::new(r#"<link\s+rel="canonical"\s+href="https?://www\.youtube\.com/channel/(UC[^\"]+)""#).ok()?;
+    if let Some(caps) = re_canonical.captures(html) {
+        return caps.get(1).map(|m| m.as_str().to_string());
+    }
+
+    // Try meta tag: <meta property="og:url" content="https://www.youtube.com/channel/UCxxxx">
+    let re_og = regex::Regex::new(r#"<meta\s+property="og:url"\s+content="https?://www\.youtube\.com/channel/(UC[^"]+)""#).ok()?;
+    if let Some(caps) = re_og.captures(html) {
+        return caps.get(1).map(|m| m.as_str().to_string());
+    }
+
+    // Try externalId in page data
+    let re_external = regex::Regex::new(r#""externalId"\s*:\s*"(UC[^"]+)""#).ok()?;
+    if let Some(caps) = re_external.captures(html) {
+        return caps.get(1).map(|m| m.as_str().to_string());
+    }
+
+    None
+}
+
+async fn resolve_youtube_url(client: &reqwest::Client, url: &str) -> Result<String, String> {
+    // If already an RSS URL, pass through
+    if url.contains("youtube.com/feeds/videos.xml") {
+        return Ok(url.to_string());
+    }
+
+    // Extract channel ID from URL if it's a /channel/UCxxxx format
+    if let Some(idx) = url.find("/channel/") {
+        let rest = &url[idx + 9..];
+        if let Some(end) = rest.find(|c: char| c == '/' || c == '?' || c == '#') {
+            let channel_id = &rest[..end];
+            if channel_id.starts_with("UC") {
+                return Ok(format!(
+                    "https://www.youtube.com/feeds/videos.xml?channel_id={}",
+                    channel_id
+                ));
+            }
+        } else if rest.starts_with("UC") {
+            return Ok(format!(
+                "https://www.youtube.com/feeds/videos.xml?channel_id={}",
+                rest
+            ));
+        }
+    }
+
+    // For @username, /c/, /user/ — fetch page and extract channel ID
+    let response = client
+        .get(url)
+        .send()
+        .await
+        .map_err(|e| format!("Failed to fetch YouTube page: {}", e))?;
+
+    let html = response
+        .text()
+        .await
+        .map_err(|e| format!("Failed to read YouTube page: {}", e))?;
+
+    let channel_id = extract_channel_id_from_html(&html)
+        .ok_or("Could not find YouTube channel ID. The channel may be private or the URL format is unsupported.")?;
+
+    Ok(format!(
+        "https://www.youtube.com/feeds/videos.xml?channel_id={}",
+        channel_id
+    ))
 }
 
 fn extract_thumbnail(entry: &feed_rs::model::Entry) -> Option<String> {

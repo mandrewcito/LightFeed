@@ -2207,7 +2207,7 @@ dependencies = [
 
 [[package]]
 name = "lightfeed"
-version = "0.3.0"
+version = "0.31.0"
 dependencies = [
  "chrono",
  "dirs",
@@ -2216,6 +2216,7 @@ dependencies = [
  "feed-rs",
  "log",
  "open",
+ "regex",
  "reqwest 0.12.28",
  "rusqlite",
  "scraper",

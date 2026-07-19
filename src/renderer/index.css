@@ -17,6 +17,10 @@ body,
   overflow: hidden;
 }
 
+html.dark {
+  color-scheme: dark;
+}
+
 /* Scrollbar styling */
 ::-webkit-scrollbar {
   width: 6px;

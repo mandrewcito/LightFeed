@@ -11,7 +11,7 @@ export function GeneralTab() {
         <select
           value={theme}
           onChange={(e) => setTheme(e.target.value as 'light' | 'dark' | 'system')}
-          className="w-full px-3 py-2 text-sm rounded border border-zinc-300 dark:border-zinc-600 bg-white dark:bg-zinc-800 outline-none"
+          className="w-full px-3 py-2 text-sm rounded border border-zinc-300 dark:border-zinc-600 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 outline-none"
         >
           <option value="light">Light</option>
           <option value="dark">Dark</option>

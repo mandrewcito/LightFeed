@@ -2,6 +2,7 @@ import { create } from 'zustand'
 import { api } from '../lib/ipc-client'
 import { useFeedStore } from './feed-store'
 import { useAppStore } from './app-store'
+import { isYouTubeUrl } from '../lib/utils'
 import type { EntryWithFeed } from '../types'
 
 interface ArticleState {
@@ -91,8 +92,8 @@ export const useArticleStore = create<ArticleState>((set, get) => ({
       await feedStore.loadUnreadCounts()
     }
 
-    // Fetch full content if URL exists
-    if (entry?.url) {
+    // Fetch full content if URL exists (skip for YouTube - handled by reader)
+    if (entry?.url && !isYouTubeUrl(entry.url)) {
       try {
         const content = await api.fetchArticleContent(entry.url)
         set({ fullContent: content, loadingContent: false })

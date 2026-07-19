@@ -6,7 +6,7 @@ A plain RSS reader built with Tauri.
 
 ## Features
 
-- RSS/Atom feed subscription and management
+- RSS/Atom/YTChannel feed subscription and management
 - Categories and drag-and-drop organization
 - Readable article extraction (reader mode)
 - OPML import/export

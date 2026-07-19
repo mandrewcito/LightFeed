@@ -1,14 +1,15 @@
 import { useEffect } from 'react'
 import { useArticleStore } from '../../stores/article-store'
 import { api } from '../../lib/ipc-client'
-import { formatDate } from '../../lib/utils'
+import { formatDate, isYouTubeUrl, stripHtml } from '../../lib/utils'
 import {
   ExternalLink,
   Star,
   ChevronLeft,
   ChevronRight,
   X,
-  Loader2
+  Loader2,
+  Play
 } from 'lucide-react'
 
 export function ArticleReader() {
@@ -116,6 +117,35 @@ export function ArticleReader() {
           {loadingContent ? (
             <div className="flex items-center justify-center py-12">
               <Loader2 size={24} className="animate-spin text-zinc-400" />
+            </div>
+          ) : isYouTubeUrl(selectedEntry.url) ? (
+            <div className="space-y-4">
+              {selectedEntry.thumbnail && (
+                <a
+                  href={selectedEntry.url!}
+                  onClick={(e) => { e.preventDefault(); api.openExternal(selectedEntry.url!) }}
+                  className="block"
+                >
+                  <img
+                    src={selectedEntry.thumbnail}
+                    alt={selectedEntry.title || ''}
+                    className="w-full rounded-lg hover:opacity-90 transition-opacity cursor-pointer"
+                  />
+                </a>
+              )}
+              {selectedEntry.content && (
+                <div className="text-sm text-zinc-700 dark:text-zinc-300 leading-relaxed whitespace-pre-wrap">
+                  {stripHtml(selectedEntry.content)}
+                </div>
+              )}
+              <a
+                href={selectedEntry.url!}
+                onClick={(e) => { e.preventDefault(); api.openExternal(selectedEntry.url!) }}
+                className="inline-flex items-center gap-2 text-sm text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 font-medium"
+              >
+                <Play size={16} fill="currentColor" />
+                Watch on YouTube
+              </a>
             </div>
           ) : fullContent ? (
             <div
