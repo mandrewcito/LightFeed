@@ -240,8 +240,10 @@ Secrets required in GitHub repo settings:
 | `m` | Mark as read |
 | `r` | Refresh all feeds |
 | `a` | Add feed |
+| `F2` | Rename selected feed |
 | `Ctrl+A` | Select all feeds |
 | `/` | Focus search |
+| `Ctrl+F` | Find in article (when open) / Focus search (when closed) |
 | `b` | Toggle sidebar |
 | `Delete` / `Backspace` | Batch delete selected feeds |
 | `Escape` | Clear selection / close dialogs |

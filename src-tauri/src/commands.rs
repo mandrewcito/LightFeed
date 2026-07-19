@@ -113,7 +113,7 @@ pub fn list_feeds(state: State<'_, DbState>) -> Result<Vec<FeedWithSubscription>
 }
 
 #[tauri::command]
-pub fn update_feed_cmd(
+pub fn update_feed(
     state: State<'_, DbState>,
     feed_id: String,
     title: Option<String>,
@@ -133,6 +133,17 @@ pub fn update_feed_cmd(
         fetch_interval,
     )
     .map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+pub fn rename_feed(
+    state: State<'_, DbState>,
+    subscription_id: String,
+    custom_title: Option<String>,
+) -> Result<(), String> {
+    let db = state.0.lock().map_err(|e| e.to_string())?;
+    db_sub::update_custom_title(&db, &subscription_id, custom_title.as_deref())
+        .map_err(|e| e.to_string())
 }
 
 #[tauri::command]

@@ -8,7 +8,7 @@ interface FeedState {
   unreadCounts: Record<string, number>
   selectedFeedId: string | null
   selectedCategoryId: string | null
-  selectedView: 'all' | 'starred' | 'feed' | 'category'
+  selectedView: 'all' | 'starred' | 'feed' | 'category' | null
   loading: boolean
   multiSelectedFeedIds: string[]
 
@@ -33,6 +33,11 @@ interface FeedState {
   moveFeedToCategory: (subscriptionId: string, categoryId: string | null) => Promise<void>
   reorderFeed: (subscriptionId: string, sortOrder: number) => Promise<void>
   reorderCategories: (orderedIds: string[]) => Promise<void>
+  renameFeed: (subscriptionId: string, customTitle: string | null) => Promise<void>
+  editingFeedId: string | null
+  setEditingFeedId: (id: string | null) => void
+  editingCategoryId: string | null
+  setEditingCategoryId: (id: string | null) => void
 }
 
 export const useFeedStore = create<FeedState>((set, get) => ({
@@ -41,9 +46,11 @@ export const useFeedStore = create<FeedState>((set, get) => ({
   unreadCounts: {},
   selectedFeedId: null,
   selectedCategoryId: null,
-  selectedView: 'all',
+  selectedView: null,
   loading: false,
   multiSelectedFeedIds: [],
+  editingFeedId: null,
+  editingCategoryId: null,
 
   loadFeeds: async () => {
     set({ loading: true })
@@ -177,5 +184,20 @@ export const useFeedStore = create<FeedState>((set, get) => ({
       ).filter(Boolean).map((c, i) => ({ ...c, sort_order: i }))
     }))
     await api.bulkReorderCategories(items)
-  }
+  },
+
+  renameFeed: async (subscriptionId: string, customTitle: string | null) => {
+    await api.renameFeed(subscriptionId, customTitle)
+    set((state) => ({
+      feeds: state.feeds.map((f) =>
+        f.subscription_id === subscriptionId
+          ? { ...f, custom_title: customTitle }
+          : f
+      )
+    }))
+  },
+
+  setEditingFeedId: (id: string | null) => set({ editingFeedId: id }),
+
+  setEditingCategoryId: (id: string | null) => set({ editingCategoryId: id }),
 }))

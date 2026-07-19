@@ -11,7 +11,7 @@ check:
 
 package-linux:
 	npm run build
-	npx tauri build --bundles deb,appimage
+	npx tauri build --bundles deb
 
 package-mac:
 	npm run build

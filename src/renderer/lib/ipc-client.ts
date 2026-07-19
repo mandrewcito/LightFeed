@@ -27,6 +27,9 @@ export const api = {
       fetchInterval: updates.fetch_interval,
     }),
 
+  renameFeed: (subscriptionId: string, customTitle: string | null) =>
+    invoke('rename_feed', { subscriptionId, customTitle }),
+
   // Categories
 
   getCategories: () =>

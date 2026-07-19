@@ -20,6 +20,7 @@ export function ArticleList() {
 
   // Reload entries when view changes
   useEffect(() => {
+    if (selectedView === null) return
     loadEntries(true)
   }, [selectedView, selectedFeedId, selectedCategoryId, searchQuery])
 

@@ -71,3 +71,11 @@ pub fn is_feed_used_elsewhere(conn: &Connection, feed_id: &str) -> Result<bool> 
         .query_row(params![feed_id], |row| row.get(0))?;
     Ok(count > 0)
 }
+
+pub fn update_custom_title(conn: &Connection, subscription_id: &str, custom_title: Option<&str>) -> Result<()> {
+    conn.execute(
+        "UPDATE subscriptions SET custom_title = ?1 WHERE id = ?2",
+        params![custom_title, subscription_id],
+    )?;
+    Ok(())
+}

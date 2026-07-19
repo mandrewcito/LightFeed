@@ -11,15 +11,20 @@ interface AppState {
   showAddFeedDialog: boolean
   showSettingsDialog: boolean
   showDeleteConfirm: boolean
+  showFuzzyFinder: boolean
+  expandedCategoryIds: string[]
 
   initTheme: () => Promise<void>
+  initExpandedCategories: () => Promise<void>
   setTheme: (theme: 'light' | 'dark' | 'system') => void
   setViewMode: (mode: ViewMode) => void
   toggleSidebar: () => void
+  toggleCategory: (id: string) => void
   setSearchQuery: (query: string) => void
   setShowAddFeedDialog: (show: boolean) => void
   setShowSettingsDialog: (show: boolean) => void
   setShowDeleteConfirm: (show: boolean) => void
+  setShowFuzzyFinder: (show: boolean) => void
 }
 
 let systemMediaQuery: MediaQueryList | null = null
@@ -59,6 +64,8 @@ export const useAppStore = create<AppState>((set) => ({
   showAddFeedDialog: false,
   showSettingsDialog: false,
   showDeleteConfirm: false,
+  showFuzzyFinder: false,
+  expandedCategoryIds: [],
 
   initTheme: async () => {
     try {
@@ -70,10 +77,31 @@ export const useAppStore = create<AppState>((set) => ({
         return
       }
     } catch {}
-applyTheme('system')
-registerSystemListener()
+    applyTheme('system')
     registerSystemListener()
     set({ theme: 'system' })
+  },
+
+  initExpandedCategories: async () => {
+    try {
+      const saved = await api.getSetting('expandedCategories')
+      if (saved) {
+        const ids = JSON.parse(saved)
+        if (Array.isArray(ids)) {
+          set({ expandedCategoryIds: ids })
+        }
+      }
+    } catch {}
+  },
+
+  toggleCategory: (id) => {
+    set((state) => {
+      const next = state.expandedCategoryIds.includes(id)
+        ? state.expandedCategoryIds.filter((i) => i !== id)
+        : [...state.expandedCategoryIds, id]
+      api.setSetting('expandedCategories', JSON.stringify(next)).catch(() => {})
+      return { expandedCategoryIds: next }
+    })
   },
 
   setTheme: (theme) => {
@@ -97,7 +125,9 @@ registerSystemListener()
 
   setShowSettingsDialog: (show) => set({ showSettingsDialog: show }),
 
-  setShowDeleteConfirm: (show) => set({ showDeleteConfirm: show })
+  setShowDeleteConfirm: (show) => set({ showDeleteConfirm: show }),
+
+  setShowFuzzyFinder: (show) => set({ showFuzzyFinder: show })
 }))
 
 applyTheme('system')

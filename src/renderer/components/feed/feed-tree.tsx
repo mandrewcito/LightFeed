@@ -1,7 +1,11 @@
 import { useState } from 'react'
 import { useFeedStore } from '../../stores/feed-store'
+import { useAppStore } from '../../stores/app-store'
 import { FeedItem } from './feed-item'
-import { ChevronRight, ChevronDown, FolderOpen, Folder, Plus, Trash2, Pencil } from 'lucide-react'
+import { ChevronRight, ChevronDown, FolderOpen, Folder, Plus, Trash2, Pencil, Copy } from 'lucide-react'
+import { ContextMenu } from '../ui/context-menu'
+import { useArticleStore } from '../../stores/article-store'
+import type { FeedWithCategory } from '../../types'
 
 export function FeedTree() {
   const feeds = useFeedStore((s) => s.feeds)
@@ -19,28 +23,37 @@ export function FeedTree() {
   const toggleSelectFeed = useFeedStore((s) => s.toggleSelectFeed)
   const clearSelection = useFeedStore((s) => s.clearSelection)
   const multiSelectedFeedIds = useFeedStore((s) => s.multiSelectedFeedIds)
+  const editingFeedId = useFeedStore((s) => s.editingFeedId)
+  const setEditingFeedId = useFeedStore((s) => s.setEditingFeedId)
+  const renameFeed = useFeedStore((s) => s.renameFeed)
+  const editingCategoryId = useFeedStore((s) => s.editingCategoryId)
+  const setEditingCategoryId = useFeedStore((s) => s.setEditingCategoryId)
+  const selectedView = useFeedStore((s) => s.selectedView)
+  const loadEntries = useArticleStore((s) => s.loadEntries)
+  const expandedCategoryIds = useAppStore((s) => s.expandedCategoryIds)
+  const toggleCategoryExpand = useAppStore((s) => s.toggleCategory)
 
-  const [expandedCategories, setExpandedCategories] = useState<Set<string>>(new Set())
   const [creatingCategory, setCreatingCategory] = useState(false)
   const [newCategoryName, setNewCategoryName] = useState('')
-  const [editingCategory, setEditingCategory] = useState<string | null>(null)
   const [editCategoryName, setEditCategoryName] = useState('')
   const [dragOverCategoryId, setDragOverCategoryId] = useState<string | null>(null)
   const [dragOverUncategorized, setDragOverUncategorized] = useState(false)
+  const [contextMenu, setContextMenu] = useState<{ x: number; y: number; feed: FeedWithCategory } | null>(null)
 
   const toggleCategory = (id: string) => {
-    setExpandedCategories((prev) => {
-      const next = new Set(prev)
-      if (next.has(id)) next.delete(id)
-      else next.add(id)
-      return next
-    })
+    toggleCategoryExpand(id)
+    if (selectedView === 'category') {
+      const { selectedCategoryId } = useFeedStore.getState()
+      if (selectedCategoryId === id) {
+        loadEntries(true)
+      }
+    }
   }
 
   const handleCreateCategory = async () => {
     if (newCategoryName.trim()) {
       const id = await createCategory(newCategoryName.trim())
-      setExpandedCategories((prev) => new Set([...prev, id]))
+      toggleCategoryExpand(id)
       setNewCategoryName('')
       setCreatingCategory(false)
     }
@@ -49,7 +62,7 @@ export function FeedTree() {
   const handleRenameCategory = async (id: string) => {
     if (editCategoryName.trim()) {
       await renameCategory(id, editCategoryName.trim())
-      setEditingCategory(null)
+      setEditingCategoryId(null)
     }
   }
 
@@ -109,13 +122,53 @@ export function FeedTree() {
     }
   }
 
+  const handleFeedContextMenu = (e: React.MouseEvent, feed: FeedWithCategory) => {
+    e.preventDefault()
+    e.stopPropagation()
+    setContextMenu({ x: e.clientX, y: e.clientY, feed })
+  }
+
+  const handleCopyLink = (url: string) => {
+    navigator.clipboard.writeText(url)
+  }
+
+  const handleDeleteFeed = (feed: FeedWithCategory) => {
+    if (confirm(`Remove "${feed.title || feed.url}"?`)) {
+      removeFeed(feed.id)
+    }
+  }
+
+  const handleRenameSubmit = async (subscriptionId: string, title: string | null) => {
+    await renameFeed(subscriptionId, title)
+    setEditingFeedId(null)
+  }
+
   const uncategorizedFeeds = feeds.filter((f) => !f.category_id)
+
+  const contextMenuItems = contextMenu ? [
+    {
+      label: 'Rename',
+      icon: <Pencil size={14} />,
+      action: () => setEditingFeedId(contextMenu.feed.subscription_id),
+    },
+    {
+      label: 'Copy link',
+      icon: <Copy size={14} />,
+      action: () => handleCopyLink(contextMenu.feed.url),
+    },
+    {
+      label: 'Delete',
+      icon: <Trash2 size={14} />,
+      action: () => handleDeleteFeed(contextMenu.feed),
+      variant: 'danger' as const,
+    },
+  ] : []
 
   return (
     <div className="space-y-0.5">
       {/* Categories */}
       {categories.map((cat) => {
-        const isExpanded = expandedCategories.has(cat.id)
+        const isExpanded = expandedCategoryIds.includes(cat.id)
         const catFeeds = feeds.filter((f) => f.category_id === cat.id)
         const catUnread = catFeeds.reduce((sum, f) => sum + (unreadCounts[f.id] || 0), 0)
         const isDragOver = dragOverCategoryId === cat.id
@@ -156,14 +209,14 @@ export function FeedTree() {
                 ) : (
                   <Folder size={14} className="text-zinc-400" />
                 )}
-                {editingCategory === cat.id ? (
+                {editingCategoryId === cat.id ? (
                   <input
                     value={editCategoryName}
                     onChange={(e) => setEditCategoryName(e.target.value)}
                     onBlur={() => handleRenameCategory(cat.id)}
                     onKeyDown={(e) => {
                       if (e.key === 'Enter') handleRenameCategory(cat.id)
-                      if (e.key === 'Escape') setEditingCategory(null)
+                      if (e.key === 'Escape') setEditingCategoryId(null)
                     }}
                     autoFocus
                     className="flex-1 bg-transparent border-b border-zinc-400 outline-none text-sm"
@@ -179,7 +232,7 @@ export function FeedTree() {
                 <button
                   onClick={(e) => {
                     e.stopPropagation()
-                    setEditingCategory(cat.id)
+                    setEditingCategoryId(cat.id)
                     setEditCategoryName(cat.name)
                   }}
                   className="p-0.5 rounded hover:bg-zinc-300 dark:hover:bg-zinc-600"
@@ -210,9 +263,12 @@ export function FeedTree() {
                     unreadCount={unreadCounts[feed.id] || 0}
                     isSelected={selectedFeedId === feed.id}
                     isMultiSelected={multiSelectedFeedIds.includes(feed.id)}
+                    isEditing={editingFeedId === feed.subscription_id}
                     onSelect={() => selectFeed(feed.id)}
                     onMultiSelect={() => toggleSelectFeed(feed.id)}
                     onRemove={() => removeFeed(feed.id)}
+                    onContextMenu={(e) => handleFeedContextMenu(e, feed)}
+                    onRenameSubmit={(title) => handleRenameSubmit(feed.subscription_id, title)}
                   />
                 ))}
               </div>
@@ -239,9 +295,12 @@ export function FeedTree() {
             unreadCount={unreadCounts[feed.id] || 0}
             isSelected={selectedFeedId === feed.id}
             isMultiSelected={multiSelectedFeedIds.includes(feed.id)}
+            isEditing={editingFeedId === feed.subscription_id}
             onSelect={() => selectFeed(feed.id)}
             onMultiSelect={() => toggleSelectFeed(feed.id)}
             onRemove={() => removeFeed(feed.id)}
+            onContextMenu={(e) => handleFeedContextMenu(e, feed)}
+            onRenameSubmit={(title) => handleRenameSubmit(feed.subscription_id, title)}
           />
         ))}
       </div>
@@ -274,7 +333,15 @@ export function FeedTree() {
         </button>
       )}
 
-
+      {/* Context menu */}
+      {contextMenu && (
+        <ContextMenu
+          x={contextMenu.x}
+          y={contextMenu.y}
+          items={contextMenuItems}
+          onClose={() => setContextMenu(null)}
+        />
+      )}
     </div>
   )
 }

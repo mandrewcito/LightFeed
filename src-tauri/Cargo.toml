@@ -1,6 +1,6 @@
 [package]
 name = "lightfeed"
-version = "0.1.0"
+version = "0.3.0"
 description = "LightFeed – A plain RSS reader"
 authors = ["mandrewcito"]
 edition = "2021"

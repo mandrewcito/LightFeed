@@ -8,15 +8,20 @@ interface FeedItemProps {
   unreadCount: number
   isSelected: boolean
   isMultiSelected: boolean
+  isEditing: boolean
   onSelect: () => void
   onMultiSelect: () => void
   onRemove: () => void
+  onContextMenu: (e: React.MouseEvent) => void
+  onRenameSubmit: (title: string) => void
 }
 
-export function FeedItem({ feed, unreadCount, isSelected, isMultiSelected, onSelect, onMultiSelect, onRemove }: FeedItemProps) {
+export function FeedItem({ feed, unreadCount, isSelected, isMultiSelected, isEditing, onSelect, onMultiSelect, onRemove, onContextMenu, onRenameSubmit }: FeedItemProps) {
   const refreshFeed = useFeedStore((s) => s.refreshFeed)
+  const setEditingFeedId = useFeedStore((s) => s.setEditingFeedId)
   const [refreshing, setRefreshing] = useState(false)
   const [isDragging, setIsDragging] = useState(false)
+  const [editValue, setEditValue] = useState(feed.custom_title || feed.title || feed.url)
 
   const handleRefresh = async (e: React.MouseEvent) => {
     e.stopPropagation()
@@ -57,12 +62,25 @@ export function FeedItem({ feed, unreadCount, isSelected, isMultiSelected, onSel
     }
   }
 
+  const handleRenameKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      onRenameSubmit(editValue.trim() || null)
+    } else if (e.key === 'Escape') {
+      setEditingFeedId(null)
+    }
+  }
+
+  const handleRenameBlur = () => {
+    onRenameSubmit(editValue.trim() || null)
+  }
+
   return (
     <div
-      draggable="true"
+      draggable={!isEditing}
       onDragStart={handleDragStart}
       onDragEnd={handleDragEnd}
       onClick={handleClick}
+      onContextMenu={onContextMenu}
       className={`group flex items-center gap-1 px-2 py-1 rounded text-sm cursor-pointer transition-colors ${
         isDragging ? 'opacity-40' : ''
       } ${
@@ -79,9 +97,21 @@ export function FeedItem({ feed, unreadCount, isSelected, isMultiSelected, onSel
       ) : (
         <div className="w-4 h-4 rounded-sm bg-zinc-300 dark:bg-zinc-600 shrink-0" />
       )}
-      <span className={`flex-1 truncate ${unreadCount > 0 ? 'font-medium text-zinc-900 dark:text-zinc-100' : 'text-zinc-600 dark:text-zinc-400'}`}>
-        {feed.custom_title || feed.title || feed.url}
-      </span>
+      {isEditing ? (
+        <input
+          value={editValue}
+          onChange={(e) => setEditValue(e.target.value)}
+          onBlur={handleRenameBlur}
+          onKeyDown={handleRenameKeyDown}
+          autoFocus
+          className="flex-1 bg-transparent border-b border-zinc-400 outline-none text-sm min-w-0"
+          onClick={(e) => e.stopPropagation()}
+        />
+      ) : (
+        <span className={`flex-1 truncate ${unreadCount > 0 ? 'font-medium text-zinc-900 dark:text-zinc-100' : 'text-zinc-600 dark:text-zinc-400'}`}>
+          {feed.custom_title || feed.title || feed.url}
+        </span>
+      )}
       {unreadCount > 0 && (
         <span className="text-xs text-zinc-500 dark:text-zinc-400">{unreadCount}</span>
       )}

@@ -9,10 +9,20 @@ A plain RSS reader built with Tauri.
 - Readable article extraction (reader mode)
 - OPML import/export
 - Keyboard shortcuts
+- Fuzzy finder (Ctrl+Shift+F)
 - Dark mode
 - Customizable storage location
 - Automated cleanup of old entries
 - Cloud sync — point storage at your synced folder (ownCloud, Nextcloud, etc.)
+
+## Fuzzy Finder
+
+Press `Ctrl+Shift+F` to open the fuzzy finder. Search through all your feeds and articles by title, URL, or author.
+
+- **Feeds** are matched in-memory (instant)
+- **Articles** are searched via the backend after a short debounce
+- Arrow keys to navigate, Enter to select, Escape to close
+- Selecting a feed opens it; selecting an article loads it in the reader
 
 ## Cloud Sync
 
