@@ -31,7 +31,9 @@
     "active": true,
     "targets": ["deb", "appimage", "nsis", "dmg", "app"],
     "icon": [
-      "icons/lf-icon.png"
+      "icons/icon.png",
+      "icons/icon.ico",
+      "icons/icon.icns"
     ],
     "linux": {
       "deb": {
