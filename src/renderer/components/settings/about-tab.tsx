@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react'
+import { api } from '../../lib/ipc-client'
 
 type UpdateStatus =
   | { type: 'idle' }
@@ -14,30 +15,30 @@ export function AboutTab() {
   const [status, setStatus] = useState<UpdateStatus>({ type: 'idle' })
 
   useEffect(() => {
-    window.api.getVersion().then(setVersion)
+    api.getVersion().then(setVersion)
   }, [])
 
   useEffect(() => {
-    window.api.onUpdateAvailable((info) => setStatus({ type: 'available', version: info.version }))
-    window.api.onUpdateNotAvailable(() => setStatus({ type: 'notAvailable' }))
-    window.api.onUpdateDownloadProgress((progress) =>
+    api.onUpdateAvailable((info) => setStatus({ type: 'available', version: info.version }))
+    api.onUpdateNotAvailable(() => setStatus({ type: 'notAvailable' }))
+    api.onUpdateDownloadProgress((progress) =>
       setStatus({ type: 'downloading', percent: Math.round(progress.percent) })
     )
-    window.api.onUpdateDownloaded(() => setStatus({ type: 'downloaded' }))
-    window.api.onUpdateError((message) => setStatus({ type: 'error', message }))
+    api.onUpdateDownloaded(() => setStatus({ type: 'downloaded' }))
+    api.onUpdateError((message) => setStatus({ type: 'error', message }))
   }, [])
 
   const handleCheck = useCallback(() => {
     setStatus({ type: 'checking' })
-    window.api.checkForUpdates()
+    api.checkForUpdates()
   }, [])
 
   const handleDownload = useCallback(() => {
-    window.api.downloadUpdate()
+    api.downloadUpdate()
   }, [])
 
   const handleInstall = useCallback(() => {
-    window.api.installUpdate()
+    api.installUpdate()
   }, [])
 
   return (

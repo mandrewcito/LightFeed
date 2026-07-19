@@ -1,0 +1,43 @@
+[package]
+name = "lightfeed"
+version = "0.1.0"
+description = "LightFeed – A plain RSS reader"
+authors = ["mandrewcito"]
+edition = "2021"
+
+[lib]
+name = "lightfeed_lib"
+crate-type = ["staticlib", "cdylib", "rlib"]
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+tauri = { version = "2", features = [] }
+tauri-plugin-shell = "2"
+tauri-plugin-dialog = "2"
+tauri-plugin-fs = "2"
+tauri-plugin-updater = "2"
+rusqlite = { version = "0.31", features = ["bundled"] }
+feed-rs = "2"
+dom_smoothie = "0.3"
+reqwest = { version = "0.12", features = ["blocking", "gzip"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+uuid = { version = "1", features = ["v4"] }
+sha1 = "0.10"
+chrono = "0.4"
+tokio = { version = "1", features = ["full"] }
+scraper = "0.21"
+thiserror = "1"
+log = "0.4"
+env_logger = "0.11"
+dirs = "6"
+open = "5"
+url = "2"
+
+[profile.release]
+strip = true
+lto = true
+codegen-units = 1
+panic = "abort"

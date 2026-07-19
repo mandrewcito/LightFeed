@@ -1,19 +1,25 @@
-.PHONY: build package package-linux package-mac package-win clean
+.PHONY: dev build check clean package-linux package-mac package-win
+
+dev:
+	npm run dev
 
 build:
 	npm run build
 
-package: build
-	npm run package
+check:
+	cd src-tauri && cargo check
 
-package-linux: build
-	npm run package:linux
+package-linux:
+	npm run build
+	npx tauri build --bundles deb,appimage
 
-package-mac: build
-	npm run package:mac
+package-mac:
+	npm run build
+	npx tauri build --bundles dmg,app
 
-package-win: build
-	npm run package:win
+package-win:
+	npm run build
+	npx tauri build --bundles nsis
 
 clean:
-	rm -rf out/ dist/
+	rm -rf dist/ src-tauri/target/

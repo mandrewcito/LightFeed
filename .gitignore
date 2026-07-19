@@ -4,3 +4,12 @@ out/
 *.db
 .DS_Store
 Thumbs.db
+
+# Rust / Tauri
+src-tauri/target/
+src-tauri/WixTools/
+src-tauri/MSVC_Signing/
+*.pdb
+
+# Tauri generated
+src-tauri/gen/

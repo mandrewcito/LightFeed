@@ -1,4 +1,5 @@
 import { create } from 'zustand'
+import { api } from '../lib/ipc-client'
 
 type ViewMode = 'cards' | 'list' | 'compact'
 
@@ -61,7 +62,7 @@ export const useAppStore = create<AppState>((set) => ({
 
   initTheme: async () => {
     try {
-      const saved = await window.api.getSetting('theme')
+      const saved = await api.getSetting('theme')
       if (saved === 'light' || saved === 'dark' || saved === 'system') {
         applyTheme(saved)
         if (saved === 'system') registerSystemListener()
@@ -83,7 +84,7 @@ registerSystemListener()
       unregisterSystemListener()
     }
     set({ theme })
-    window.api.setSetting('theme', theme).catch(() => {})
+    api.setSetting('theme', theme).catch(() => {})
   },
 
   setViewMode: (mode) => set({ viewMode: mode }),

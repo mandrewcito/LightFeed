@@ -1,6 +1,6 @@
 # LightFeed
 
-A plain RSS reader built with Electron.
+A plain RSS reader built with Tauri.
 
 ## Features
 
@@ -54,8 +54,8 @@ Feeds can be organized into categories using `<outline>` groups. Import via Sett
 ## Tech Stack
 
 - **Frontend:** React, TypeScript, Tailwind CSS, Zustand
-- **Backend:** Electron, better-sqlite3
-- **Build:** electron-vite, electron-builder
+- **Backend:** Tauri (Rust), rusqlite
+- **Build:** Vite, Tauri CLI
 
 ## Development
 
@@ -68,17 +68,12 @@ npm run dev
 
 ```bash
 npm run build
-npm run package:linux   # AppImage + deb
-npm run package:mac     # dmg + zip
-npm run package:win     # nsis + portable
 ```
 
 Or use the Makefile:
 
 ```bash
-make package-linux
-make package-mac
-make package-win
+make build
 make clean
 ```
 
