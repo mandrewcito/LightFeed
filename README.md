@@ -4,6 +4,7 @@ A plain RSS reader built with Tauri.
 
 ![LightFeed](resources/banner-hero.svg)
 
+
 ## Features
 
 - RSS/Atom/YTChannel feed subscription and management
@@ -16,6 +17,14 @@ A plain RSS reader built with Tauri.
 - Customizable storage location
 - Automated cleanup of old entries
 - Cloud sync — point storage at your synced folder (ownCloud, Nextcloud, etc.)
+
+## Screenshots
+
+| | |
+|---|---|
+| ![Add Feed](resources/screenshots/00.add-feed.png) | ![Feed Detail](resources/screenshots/01.feed-detail.png) |
+| ![Feed Detail 2](resources/screenshots/02.feed-detail-2.png) | ![Settings Storage](resources/screenshots/03.settings-storage.png) |
+| ![Settings Import](resources/screenshots/04.settings-import.png) | |
 
 ## Fuzzy Finder
 
