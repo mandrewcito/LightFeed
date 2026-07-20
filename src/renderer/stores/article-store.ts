@@ -217,6 +217,7 @@ export const useArticleStore = create<ArticleState>((set, get) => ({
     const results = await api.getEntries({ feed_id: feedId, limit: 99999 })
     const total = results.length
     let current = 0
+    const localCache = new Map(get().contentCache)
 
     for (const entry of results) {
       if (isYouTubeUrl(entry.url)) {
@@ -225,17 +226,12 @@ export const useArticleStore = create<ArticleState>((set, get) => ({
         continue
       }
 
-      // Check DB cache
       const dbContent = await api.getEntryContent(entry.id)
       if (!dbContent && entry.url) {
-        // Fetch from network and save
         try {
           const content = await api.fetchArticleContent(entry.url)
           await api.saveEntryContent(entry.id, content)
-          // Also cache in memory
-          const newCache = new Map(get().contentCache)
-          newCache.set(entry.url, content)
-          set({ contentCache: newCache })
+          localCache.set(entry.url, content)
         } catch {
           // Skip failed entries
         }
@@ -244,36 +240,41 @@ export const useArticleStore = create<ArticleState>((set, get) => ({
       current++
       onProgress?.(current, total)
     }
+    set({ contentCache: localCache })
   },
 
   downloadAllContent: async (onProgress) => {
     const feeds = useFeedStore.getState().feeds
-    // Get total count across all feeds
     let totalAll = 0
     const feedEntries: { feedId: string; entries: EntryWithFeed[] }[] = []
+    const uniqueUrls = new Set<string>()
     for (const feed of feeds) {
       const entries = await api.getEntries({ feed_id: feed.feed_id, limit: 99999 })
       feedEntries.push({ feedId: feed.feed_id, entries })
-      totalAll += entries.length
+      for (const e of entries) {
+        if (e.url) uniqueUrls.add(e.url)
+      }
     }
+    totalAll = uniqueUrls.size
 
     let currentAll = 0
+    const localCache = new Map(get().contentCache)
+    const processedUrls = new Set<string>()
     for (const { entries } of feedEntries) {
       for (const entry of entries) {
-        if (isYouTubeUrl(entry.url)) {
+        if (!entry.url || processedUrls.has(entry.url)) {
           currentAll++
           onProgress?.(currentAll, totalAll)
           continue
         }
+        processedUrls.add(entry.url)
 
         const dbContent = await api.getEntryContent(entry.id)
-        if (!dbContent && entry.url) {
+        if (!dbContent) {
           try {
             const content = await api.fetchArticleContent(entry.url)
             await api.saveEntryContent(entry.id, content)
-            const newCache = new Map(get().contentCache)
-            newCache.set(entry.url, content)
-            set({ contentCache: newCache })
+            localCache.set(entry.url, content)
           } catch {
             // Skip failed entries
           }
@@ -283,5 +284,6 @@ export const useArticleStore = create<ArticleState>((set, get) => ({
         onProgress?.(currentAll, totalAll)
       }
     }
+    set({ contentCache: localCache })
   }
 }))
