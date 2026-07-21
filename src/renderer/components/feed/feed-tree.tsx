@@ -4,6 +4,7 @@ import { useAppStore } from '../../stores/app-store'
 import { FeedItem } from './feed-item'
 import { ChevronRight, ChevronDown, FolderOpen, Folder, Plus, Trash2, Pencil, Copy, Download } from 'lucide-react'
 import { ContextMenu } from '../ui/context-menu'
+import { ConfirmDialog } from '../ui/confirm-dialog'
 import { useArticleStore } from '../../stores/article-store'
 import type { FeedWithCategory } from '../../types'
 
@@ -40,6 +41,8 @@ export function FeedTree() {
   const [dragOverUncategorized, setDragOverUncategorized] = useState(false)
   const [contextMenu, setContextMenu] = useState<{ x: number; y: number; feed: FeedWithCategory } | null>(null)
   const [downloadingFeed, setDownloadingFeed] = useState<{ feedId: string; current: number; total: number } | null>(null)
+  const [deleteFeedConfirm, setDeleteFeedConfirm] = useState<FeedWithCategory | null>(null)
+  const [deleteCategoryConfirm, setDeleteCategoryConfirm] = useState<{ id: string; name: string } | null>(null)
 
   const toggleCategory = (id: string) => {
     toggleCategoryExpand(id)
@@ -134,9 +137,7 @@ export function FeedTree() {
   }
 
   const handleDeleteFeed = (feed: FeedWithCategory) => {
-    if (confirm(`Remove "${feed.title || feed.url}"?`)) {
-      removeFeed(feed.id)
-    }
+    setDeleteFeedConfirm(feed)
   }
 
   const handleDownloadNews = async (feed: FeedWithCategory) => {
@@ -259,9 +260,7 @@ export function FeedTree() {
                 <button
                   onClick={(e) => {
                     e.stopPropagation()
-                    if (confirm(`Delete category "${cat.name}"? Feeds inside will be moved to Uncategorized.`)) {
-                      deleteCategory(cat.id)
-                    }
+                    setDeleteCategoryConfirm({ id: cat.id, name: cat.name })
                   }}
                   className="p-0.5 rounded hover:bg-zinc-300 dark:hover:bg-zinc-600"
                   title="Delete category"
@@ -282,7 +281,7 @@ export function FeedTree() {
                       isEditing={editingFeedId === feed.subscription_id}
                       onSelect={() => selectFeed(feed.id)}
                       onMultiSelect={() => toggleSelectFeed(feed.id)}
-                      onRemove={() => removeFeed(feed.id)}
+                      onRemove={() => handleDeleteFeed(feed)}
                       onContextMenu={(e) => handleFeedContextMenu(e, feed)}
                       onRenameSubmit={(title) => handleRenameSubmit(feed.subscription_id, title)}
                     />
@@ -329,7 +328,7 @@ export function FeedTree() {
               isEditing={editingFeedId === feed.subscription_id}
               onSelect={() => selectFeed(feed.id)}
               onMultiSelect={() => toggleSelectFeed(feed.id)}
-              onRemove={() => removeFeed(feed.id)}
+              onRemove={() => handleDeleteFeed(feed)}
               onContextMenu={(e) => handleFeedContextMenu(e, feed)}
               onRenameSubmit={(title) => handleRenameSubmit(feed.subscription_id, title)}
             />
@@ -388,6 +387,40 @@ export function FeedTree() {
           onClose={() => setContextMenu(null)}
         />
       )}
+
+      {/* Delete feed confirmation */}
+      <ConfirmDialog
+        open={deleteFeedConfirm !== null}
+        title="Remove Feed"
+        message={`Remove "${deleteFeedConfirm?.title || deleteFeedConfirm?.url || ''}"? This cannot be undone.`}
+        actions={[
+          { label: 'Remove', value: 'remove', variant: 'danger' },
+          { label: 'Cancel', value: 'cancel' },
+        ]}
+        onAction={(value) => {
+          if (value === 'remove' && deleteFeedConfirm) {
+            removeFeed(deleteFeedConfirm.id)
+          }
+        }}
+        onClose={() => setDeleteFeedConfirm(null)}
+      />
+
+      {/* Delete category confirmation */}
+      <ConfirmDialog
+        open={deleteCategoryConfirm !== null}
+        title="Delete Category"
+        message={`Delete category "${deleteCategoryConfirm?.name || ''}"? Feeds inside will be moved to Uncategorized.`}
+        actions={[
+          { label: 'Delete', value: 'delete', variant: 'danger' },
+          { label: 'Cancel', value: 'cancel' },
+        ]}
+        onAction={(value) => {
+          if (value === 'delete' && deleteCategoryConfirm) {
+            deleteCategory(deleteCategoryConfirm.id)
+          }
+        }}
+        onClose={() => setDeleteCategoryConfirm(null)}
+      />
     </div>
   )
 }

@@ -5,6 +5,20 @@ import { useAppStore } from './app-store'
 import { isYouTubeUrl } from '../lib/utils'
 import type { EntryWithFeed } from '../types'
 
+const DOWNLOAD_BATCH_SIZE = 100
+
+async function fetchAllEntriesBatched(filter: Record<string, unknown>, batchSize = DOWNLOAD_BATCH_SIZE): Promise<EntryWithFeed[]> {
+  const all: EntryWithFeed[] = []
+  let offset = 0
+  while (true) {
+    const batch = await api.getEntries({ ...filter, limit: batchSize, offset })
+    all.push(...batch)
+    if (batch.length < batchSize) break
+    offset += batch.length
+  }
+  return all
+}
+
 interface ArticleState {
   entries: EntryWithFeed[]
   selectedEntryId: string | null
@@ -214,7 +228,7 @@ export const useArticleStore = create<ArticleState>((set, get) => ({
   },
 
   downloadFeedContent: async (feedId, onProgress) => {
-    const results = await api.getEntries({ feed_id: feedId, limit: 99999 })
+    const results = await fetchAllEntriesBatched({ feed_id: feedId })
     const total = results.length
     let current = 0
     const localCache = new Map(get().contentCache)
@@ -249,7 +263,7 @@ export const useArticleStore = create<ArticleState>((set, get) => ({
     const feedEntries: { feedId: string; entries: EntryWithFeed[] }[] = []
     const uniqueUrls = new Set<string>()
     for (const feed of feeds) {
-      const entries = await api.getEntries({ feed_id: feed.feed_id, limit: 99999 })
+      const entries = await fetchAllEntriesBatched({ feed_id: feed.feed_id, unread_only: true })
       feedEntries.push({ feedId: feed.feed_id, entries })
       for (const e of entries) {
         if (e.url) uniqueUrls.add(e.url)
@@ -263,8 +277,6 @@ export const useArticleStore = create<ArticleState>((set, get) => ({
     for (const { entries } of feedEntries) {
       for (const entry of entries) {
         if (!entry.url || processedUrls.has(entry.url)) {
-          currentAll++
-          onProgress?.(currentAll, totalAll)
           continue
         }
         processedUrls.add(entry.url)

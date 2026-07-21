@@ -32,9 +32,7 @@ export function FeedItem({ feed, unreadCount, isSelected, isMultiSelected, isEdi
 
   const handleRemove = (e: React.MouseEvent) => {
     e.stopPropagation()
-    if (confirm(`Remove "${feed.title || feed.url}"?`)) {
-      onRemove()
-    }
+    onRemove()
   }
 
   const handleDragStart = (e: React.DragEvent) => {
