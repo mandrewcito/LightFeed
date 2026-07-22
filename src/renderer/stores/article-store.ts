@@ -101,10 +101,10 @@ export const useArticleStore = create<ArticleState>((set, get) => ({
       await api.markRead(entryId)
       set((state) => ({
         entries: state.entries.map((e) =>
-          e.id === entryId ? { ...e, has_read: 1 } : e
+          e.id === entryId ? { ...e, has_read: true } : e
         ),
         selectedEntry: state.selectedEntry?.id === entryId
-          ? { ...state.selectedEntry, has_read: 1 }
+          ? { ...state.selectedEntry, has_read: true }
           : state.selectedEntry
       }))
 
@@ -179,15 +179,17 @@ export const useArticleStore = create<ArticleState>((set, get) => ({
     await api.markRead(entryId)
     set((state) => ({
       entries: state.entries.map((e) =>
-        e.id === entryId ? { ...e, has_read: 1 } : e
+        e.id === entryId ? { ...e, has_read: true } : e
       )
     }))
+    const feedStore = useFeedStore.getState()
+    await feedStore.loadUnreadCounts()
   },
 
   markAllRead: async (feedId?: string, categoryId?: string) => {
     await api.markAllRead(feedId, categoryId)
     set((state) => ({
-      entries: state.entries.map((e) => ({ ...e, has_read: 1 }))
+      entries: state.entries.map((e) => ({ ...e, has_read: true }))
     }))
     const feedStore = useFeedStore.getState()
     await feedStore.loadUnreadCounts()
@@ -197,10 +199,10 @@ export const useArticleStore = create<ArticleState>((set, get) => ({
     await api.toggleStar(entryId)
     set((state) => ({
       entries: state.entries.map((e) =>
-        e.id === entryId ? { ...e, starred: e.starred ? 0 : 1 } : e
+        e.id === entryId ? { ...e, starred: !e.starred } : e
       ),
       selectedEntry: state.selectedEntry?.id === entryId
-        ? { ...state.selectedEntry, starred: state.selectedEntry.starred ? 0 : 1 }
+        ? { ...state.selectedEntry, starred: !state.selectedEntry.starred }
         : state.selectedEntry
     }))
   },

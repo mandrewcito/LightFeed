@@ -61,6 +61,7 @@ pub struct FeedWithSubscription {
     pub category_id: Option<String>,
     pub subscription_id: Option<String>,
     pub custom_title: Option<String>,
+    pub sort_order: i32,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]

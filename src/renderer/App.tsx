@@ -1,4 +1,5 @@
 import { useEffect } from 'react'
+import { listen } from '@tauri-apps/api/event'
 import { useFeedStore } from './stores/feed-store'
 import { MainLayout } from './components/layout/main-layout'
 import { AddFeedDialog } from './components/feed/add-feed-dialog'
@@ -24,6 +25,11 @@ export function App() {
     loadFeeds()
     loadCategories()
     loadUnreadCounts()
+
+    const unlisten = listen('feeds-refreshed', () => {
+      loadUnreadCounts()
+    })
+    return () => { unlisten.then(fn => fn()) }
   }, [])
 
   return (

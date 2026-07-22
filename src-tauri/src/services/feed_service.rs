@@ -3,8 +3,9 @@ use std::time::Duration;
 use rusqlite::Connection;
 use log::error;
 
-use crate::db::models::ParsedFeed;
+use crate::db::models::{ParsedFeed, ParsedItem};
 use crate::db::{feed as db_feed, subscription as db_sub, entry as db_entry};
+use super::cleanup;
 
 pub struct FeedService {
     pub client: reqwest::Client,
@@ -92,6 +93,18 @@ impl FeedService {
         })
     }
 
+    fn filter_items_by_retention(conn: &Connection, items: Vec<ParsedItem>) -> Vec<ParsedItem> {
+        let days = match cleanup::get_cleanup_days(conn) {
+            Some(d) => d,
+            None => return items,
+        };
+        let cutoff = chrono::Utc::now().timestamp() - days * 86400;
+        items
+            .into_iter()
+            .filter(|i| i.published_at.map_or(true, |ts| ts >= cutoff))
+            .collect()
+    }
+
     pub async fn add_and_subscribe(
         &self,
         conn: &Arc<Mutex<Connection>>,
@@ -130,7 +143,10 @@ impl FeedService {
 
         if !parsed.items.is_empty() {
             let db = conn.lock().map_err(|e| e.to_string())?;
-            db_entry::upsert_entries(&db, &feed_id, &parsed.items).map_err(|e| e.to_string())?;
+            let items = Self::filter_items_by_retention(&db, parsed.items);
+            if !items.is_empty() {
+                db_entry::upsert_entries(&db, &feed_id, &items).map_err(|e| e.to_string())?;
+            }
         }
 
         Ok(feed_id)
@@ -154,7 +170,8 @@ impl FeedService {
             Ok(parsed) => {
                 let new_count = {
                     let db = conn.lock().map_err(|e| e.to_string())?;
-                    db_entry::upsert_entries(&db, feed_id, &parsed.items)
+                    let items = Self::filter_items_by_retention(&db, parsed.items);
+                    db_entry::upsert_entries(&db, feed_id, &items)
                         .map_err(|e| e.to_string())?
                 };
                 {

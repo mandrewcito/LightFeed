@@ -2,8 +2,8 @@ use std::sync::{Arc, Mutex};
 use rusqlite::Connection;
 use log::{info, error};
 
-use crate::db::settings;
 use crate::db::entry;
+use crate::db::settings;
 
 pub fn start_cleanup_scheduler(conn: Arc<Mutex<Connection>>) {
     tauri::async_runtime::spawn(async move {
@@ -20,21 +20,23 @@ pub fn start_cleanup_scheduler(conn: Arc<Mutex<Connection>>) {
     });
 }
 
+pub fn get_cleanup_days(conn: &Connection) -> Option<i64> {
+    match settings::get_setting(conn, "cleanup_older_than_days") {
+        Ok(Some(v)) => v.parse::<i64>().ok().filter(|&d| d > 0),
+        _ => None,
+    }
+}
+
 pub fn run_cleanup(conn: &Arc<Mutex<Connection>>) -> usize {
-    let days_str = {
+    let days = {
         let db = match conn.lock() {
             Ok(db) => db,
             Err(_) => return 0,
         };
-        match settings::get_setting(&db, "cleanup_older_than_days") {
-            Ok(Some(v)) => v,
-            _ => return 0,
+        match get_cleanup_days(&db) {
+            Some(d) => d,
+            None => return 0,
         }
-    };
-
-    let days: i64 = match days_str.parse() {
-        Ok(d) if d > 0 => d,
-        _ => return 0,
     };
 
     let db = match conn.lock() {

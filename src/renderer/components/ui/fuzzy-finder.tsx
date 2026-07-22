@@ -30,10 +30,10 @@ function filterFeeds(query: string, feeds: FeedWithCategory[]): SearchResult[] {
     .slice(0, 10)
     .map((f) => ({
       type: 'feed' as const,
-      id: f.feed_id,
+      id: f.id,
       title: f.custom_title || f.title || f.url,
       subtitle: f.url,
-      feedId: f.feed_id
+      feedId: f.id
     }))
 }
 

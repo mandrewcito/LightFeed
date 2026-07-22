@@ -104,6 +104,7 @@ pub fn list_feeds(state: State<'_, DbState>) -> Result<Vec<FeedWithSubscription>
                 category_id: sub.and_then(|s| s.category_id.clone()),
                 subscription_id: sub.map(|s| s.subscription_id.clone()),
                 custom_title: sub.and_then(|s| s.custom_title.clone()),
+                sort_order: sub.map(|s| s.sort_order).unwrap_or(0),
                 feed: f,
             }
         })

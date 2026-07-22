@@ -42,8 +42,8 @@ export interface Entry {
   author: string | null
   published_at: number | null
   fetched_at: number
-  has_read: number
-  starred: number
+  has_read: boolean
+  starred: boolean
   thumbnail: string | null
 }
 

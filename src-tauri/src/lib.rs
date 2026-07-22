@@ -3,6 +3,7 @@ mod services;
 mod commands;
 
 use std::sync::{Arc, Mutex};
+use tauri::Emitter;
 use tauri::Manager;
 use log::info;
 
@@ -32,11 +33,13 @@ pub fn run() {
 
             // Start feed refresh scheduler
             let conn_for_scheduler = conn.clone();
+            let app_handle = app.handle().clone();
             tauri::async_runtime::spawn(async move {
                 // Initial refresh after 5 seconds
                 tokio::time::sleep(tokio::time::Duration::from_secs(5)).await;
                 let service = services::feed_service::FeedService::new();
                 let _ = service.refresh_all(&conn_for_scheduler).await;
+                let _ = app_handle.emit("feeds-refreshed", ());
 
                 // Then every 30 minutes
                 let mut interval = tokio::time::interval(tokio::time::Duration::from_secs(30 * 60));
@@ -44,6 +47,7 @@ pub fn run() {
                     interval.tick().await;
                     let service = services::feed_service::FeedService::new();
                     let _ = service.refresh_all(&conn_for_scheduler).await;
+                    let _ = app_handle.emit("feeds-refreshed", ());
                 }
             });
 
