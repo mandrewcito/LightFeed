@@ -19,6 +19,32 @@ async function fetchAllEntriesBatched(filter: Record<string, unknown>, batchSize
   return all
 }
 
+async function batchDownloadEntries(
+  entries: EntryWithFeed[],
+  localCache: Record<string, string>,
+  onProgress?: (current: number, total: number) => void,
+): Promise<Record<string, string>> {
+  let current = 0
+  for (const entry of entries) {
+    if (!entry.url || isYouTubeUrl(entry.url)) {
+      current++
+      onProgress?.(current, entries.length)
+      continue
+    }
+    const dbContent = await api.getEntryContent(entry.id)
+    if (!dbContent) {
+      try {
+        const content = await api.fetchArticleContent(entry.url)
+        await api.saveEntryContent(entry.id, content)
+        localCache[entry.url] = content
+      } catch {}
+    }
+    current++
+    onProgress?.(current, entries.length)
+  }
+  return localCache
+}
+
 interface ArticleState {
   entries: EntryWithFeed[]
   selectedEntryId: string | null
@@ -29,7 +55,8 @@ interface ArticleState {
   hasMore: boolean
   fullContent: string | null
   loadingContent: boolean
-  contentCache: Map<string, string>
+  contentCache: Record<string, string>
+  downloading: boolean
 
   loadEntries: (reset?: boolean) => Promise<void>
   selectEntry: (entryId: string) => Promise<void>
@@ -56,7 +83,8 @@ export const useArticleStore = create<ArticleState>((set, get) => ({
   hasMore: true,
   fullContent: null,
   loadingContent: false,
-  contentCache: new Map(),
+  contentCache: {},
+  downloading: false,
 
   loadEntries: async (reset = true) => {
     const { offset } = get()
@@ -115,7 +143,7 @@ export const useArticleStore = create<ArticleState>((set, get) => ({
     // Fetch full content if URL exists (skip for YouTube - handled by reader)
     if (entry?.url && !isYouTubeUrl(entry.url)) {
       // Check in-memory cache first
-      const cached = get().contentCache.get(entry.url)
+      const cached = entry.url ? get().contentCache[entry.url] : undefined
       if (cached) {
         set({ fullContent: cached, loadingContent: false })
       } else {
@@ -124,9 +152,7 @@ export const useArticleStore = create<ArticleState>((set, get) => ({
           const dbContent = await api.getEntryContent(entryId)
           if (dbContent) {
             set((state) => {
-              const newCache = new Map(state.contentCache)
-              newCache.set(entry.url!, dbContent)
-              return { fullContent: dbContent, loadingContent: false, contentCache: newCache }
+              return { fullContent: dbContent, loadingContent: false, contentCache: { ...state.contentCache, [entry.url!]: dbContent } }
             })
           } else {
             // Fetch from network
@@ -134,9 +160,7 @@ export const useArticleStore = create<ArticleState>((set, get) => ({
             // Save to DB
             api.saveEntryContent(entryId, content).catch(() => {})
             set((state) => {
-              const newCache = new Map(state.contentCache)
-              newCache.set(entry.url!, content)
-              return { fullContent: content, loadingContent: false, contentCache: newCache }
+              return { fullContent: content, loadingContent: false, contentCache: { ...state.contentCache, [entry.url!]: content } }
             })
           }
         } catch {
@@ -159,9 +183,9 @@ export const useArticleStore = create<ArticleState>((set, get) => ({
       .map((e) => e.url)
       .filter((url): url is string => !!url)
     if (feedEntryUrls.length === 0) return
-    const newCache = new Map(contentCache)
+    const newCache = { ...contentCache }
     for (const url of feedEntryUrls) {
-      newCache.delete(url)
+      delete newCache[url]
     }
     set({ contentCache: newCache })
   },
@@ -170,8 +194,8 @@ export const useArticleStore = create<ArticleState>((set, get) => ({
     const { entries, contentCache } = get()
     const entry = entries.find((e) => e.id === entryId)
     if (!entry?.url) return
-    const newCache = new Map(contentCache)
-    newCache.delete(entry.url)
+    const newCache = { ...contentCache }
+    delete newCache[entry.url]
     set({ contentCache: newCache })
   },
 
@@ -230,74 +254,29 @@ export const useArticleStore = create<ArticleState>((set, get) => ({
   },
 
   downloadFeedContent: async (feedId, onProgress) => {
+    set({ downloading: true })
     const results = await fetchAllEntriesBatched({ feed_id: feedId })
-    const total = results.length
-    let current = 0
-    const localCache = new Map(get().contentCache)
-
-    for (const entry of results) {
-      if (isYouTubeUrl(entry.url)) {
-        current++
-        onProgress?.(current, total)
-        continue
-      }
-
-      const dbContent = await api.getEntryContent(entry.id)
-      if (!dbContent && entry.url) {
-        try {
-          const content = await api.fetchArticleContent(entry.url)
-          await api.saveEntryContent(entry.id, content)
-          localCache.set(entry.url, content)
-        } catch {
-          // Skip failed entries
-        }
-      }
-
-      current++
-      onProgress?.(current, total)
-    }
-    set({ contentCache: localCache })
+    const localCache = { ...get().contentCache }
+    await batchDownloadEntries(results, localCache, onProgress)
+    set({ contentCache: localCache, downloading: false })
   },
 
   downloadAllContent: async (onProgress) => {
+    set({ downloading: true })
     const feeds = useFeedStore.getState().feeds
-    let totalAll = 0
-    const feedEntries: { feedId: string; entries: EntryWithFeed[] }[] = []
+    const feedEntries: EntryWithFeed[] = []
     const uniqueUrls = new Set<string>()
     for (const feed of feeds) {
       const entries = await fetchAllEntriesBatched({ feed_id: feed.feed_id, unread_only: true })
-      feedEntries.push({ feedId: feed.feed_id, entries })
       for (const e of entries) {
-        if (e.url) uniqueUrls.add(e.url)
+        if (e.url && !uniqueUrls.has(e.url)) {
+          uniqueUrls.add(e.url)
+          feedEntries.push(e)
+        }
       }
     }
-    totalAll = uniqueUrls.size
-
-    let currentAll = 0
-    const localCache = new Map(get().contentCache)
-    const processedUrls = new Set<string>()
-    for (const { entries } of feedEntries) {
-      for (const entry of entries) {
-        if (!entry.url || processedUrls.has(entry.url)) {
-          continue
-        }
-        processedUrls.add(entry.url)
-
-        const dbContent = await api.getEntryContent(entry.id)
-        if (!dbContent) {
-          try {
-            const content = await api.fetchArticleContent(entry.url)
-            await api.saveEntryContent(entry.id, content)
-            localCache.set(entry.url, content)
-          } catch {
-            // Skip failed entries
-          }
-        }
-
-        currentAll++
-        onProgress?.(currentAll, totalAll)
-      }
-    }
-    set({ contentCache: localCache })
+    const localCache = { ...get().contentCache }
+    await batchDownloadEntries(feedEntries, localCache, onProgress)
+    set({ contentCache: localCache, downloading: false })
   }
 }))

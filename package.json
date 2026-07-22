@@ -1,6 +1,6 @@
 {
   "name": "lightfeed",
-  "version": "0.35.0",
+  "version": "0.36.0",
   "description": "LightFeed – A plain RSS reader",
   "author": "mandrewcito",
   "homepage": "https://lightfeed.mandrewcito.dev",
@@ -19,7 +19,6 @@
     "@tauri-apps/plugin-dialog": "^2.0.0",
     "@tauri-apps/plugin-fs": "^2.0.0",
     "@tauri-apps/plugin-shell": "^2.0.0",
-    "immer": "^11.1.11",
     "lucide-react": "^1.24.0",
     "zustand": "^5.0.0"
   },

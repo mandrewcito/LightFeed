@@ -12,6 +12,15 @@ import {
   Play
 } from 'lucide-react'
 
+function processHtml(html: string): string {
+  const doc = new DOMParser().parseFromString(html, 'text/html')
+  doc.querySelectorAll('a[href]').forEach((a) => {
+    a.setAttribute('target', '_blank')
+    a.setAttribute('rel', 'noopener noreferrer')
+  })
+  return doc.body.innerHTML
+}
+
 export function ArticleReader() {
   const selectedEntry = useArticleStore((s) => s.selectedEntry)
   const fullContent = useArticleStore((s) => s.fullContent)
@@ -150,12 +159,12 @@ export function ArticleReader() {
           ) : fullContent ? (
             <div
               className="article-content text-sm text-zinc-800 dark:text-zinc-200"
-              dangerouslySetInnerHTML={{ __html: fullContent }}
+              dangerouslySetInnerHTML={{ __html: processHtml(fullContent) }}
             />
           ) : selectedEntry.content ? (
             <div
               className="article-content text-sm text-zinc-800 dark:text-zinc-200"
-              dangerouslySetInnerHTML={{ __html: selectedEntry.content }}
+              dangerouslySetInnerHTML={{ __html: processHtml(selectedEntry.content) }}
             />
           ) : (
             <p className="text-zinc-400 italic">No content available</p>

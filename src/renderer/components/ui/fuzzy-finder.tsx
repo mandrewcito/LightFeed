@@ -38,9 +38,11 @@ function filterFeeds(query: string, feeds: FeedWithCategory[]): SearchResult[] {
 }
 
 export function FuzzyFinder() {
-  const { showFuzzyFinder, setShowFuzzyFinder } = useAppStore()
-  const { feeds, selectFeed, selectedFeedId } = useFeedStore()
-  const { selectEntry } = useArticleStore()
+  const showFuzzyFinder = useAppStore((s) => s.showFuzzyFinder)
+  const setShowFuzzyFinder = useAppStore((s) => s.setShowFuzzyFinder)
+  const feeds = useFeedStore((s) => s.feeds)
+  const selectFeed = useFeedStore((s) => s.selectFeed)
+  const selectEntry = useArticleStore((s) => s.selectEntry)
 
   const [query, setQuery] = useState('')
   const [feedResults, setFeedResults] = useState<SearchResult[]>([])

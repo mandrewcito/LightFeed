@@ -2,33 +2,51 @@ import { useEffect } from 'react'
 import { useArticleStore } from '../stores/article-store'
 import { useFeedStore } from '../stores/feed-store'
 import { useAppStore } from '../stores/app-store'
+import { useShallow } from 'zustand/shallow'
 
 export function useKeyboard() {
-  const navigateNext = useArticleStore((s) => s.navigateNext)
-  const navigatePrev = useArticleStore((s) => s.navigatePrev)
-  const selectedEntryId = useArticleStore((s) => s.selectedEntryId)
-  const selectEntry = useArticleStore((s) => s.selectEntry)
-  const entries = useArticleStore((s) => s.entries)
-  const toggleStar = useArticleStore((s) => s.toggleStar)
-  const markRead = useArticleStore((s) => s.markRead)
-  const refreshAll = useFeedStore((s) => s.refreshAll)
-  const selectAllFeeds = useFeedStore((s) => s.selectAllFeeds)
-  const multiSelectedFeedIds = useFeedStore((s) => s.multiSelectedFeedIds)
-  const clearSelection = useFeedStore((s) => s.clearSelection)
-  const selectedFeedId = useFeedStore((s) => s.selectedFeedId)
-  const feeds = useFeedStore((s) => s.feeds)
-  const setEditingFeedId = useFeedStore((s) => s.setEditingFeedId)
-  const selectedCategoryId = useFeedStore((s) => s.selectedCategoryId)
-  const categories = useFeedStore((s) => s.categories)
-  const setEditingCategoryId = useFeedStore((s) => s.setEditingCategoryId)
-  const showAddFeedDialog = useAppStore((s) => s.showAddFeedDialog)
-  const showSettingsDialog = useAppStore((s) => s.showSettingsDialog)
-  const showDeleteConfirm = useAppStore((s) => s.showDeleteConfirm)
-  const setShowAddFeedDialog = useAppStore((s) => s.setShowAddFeedDialog)
-  const setShowDeleteConfirm = useAppStore((s) => s.setShowDeleteConfirm)
-  const setShowFuzzyFinder = useAppStore((s) => s.setShowFuzzyFinder)
-  const showFuzzyFinder = useAppStore((s) => s.showFuzzyFinder)
-  const toggleSidebar = useAppStore((s) => s.toggleSidebar)
+  const {
+    navigateNext, navigatePrev, selectedEntryId, selectEntry,
+    entries, toggleStar, markRead,
+  } = useArticleStore(useShallow((s) => ({
+    navigateNext: s.navigateNext,
+    navigatePrev: s.navigatePrev,
+    selectedEntryId: s.selectedEntryId,
+    selectEntry: s.selectEntry,
+    entries: s.entries,
+    toggleStar: s.toggleStar,
+    markRead: s.markRead,
+  })))
+  const {
+    refreshAll, selectAllFeeds, multiSelectedFeedIds, clearSelection,
+    selectedFeedId, feeds, setEditingFeedId, selectedCategoryId,
+    categories, setEditingCategoryId,
+  } = useFeedStore(useShallow((s) => ({
+    refreshAll: s.refreshAll,
+    selectAllFeeds: s.selectAllFeeds,
+    multiSelectedFeedIds: s.multiSelectedFeedIds,
+    clearSelection: s.clearSelection,
+    selectedFeedId: s.selectedFeedId,
+    feeds: s.feeds,
+    setEditingFeedId: s.setEditingFeedId,
+    selectedCategoryId: s.selectedCategoryId,
+    categories: s.categories,
+    setEditingCategoryId: s.setEditingCategoryId,
+  })))
+  const {
+    showAddFeedDialog, showSettingsDialog, showDeleteConfirm,
+    setShowAddFeedDialog, setShowDeleteConfirm, setShowFuzzyFinder,
+    showFuzzyFinder, toggleSidebar,
+  } = useAppStore(useShallow((s) => ({
+    showAddFeedDialog: s.showAddFeedDialog,
+    showSettingsDialog: s.showSettingsDialog,
+    showDeleteConfirm: s.showDeleteConfirm,
+    setShowAddFeedDialog: s.setShowAddFeedDialog,
+    setShowDeleteConfirm: s.setShowDeleteConfirm,
+    setShowFuzzyFinder: s.setShowFuzzyFinder,
+    showFuzzyFinder: s.showFuzzyFinder,
+    toggleSidebar: s.toggleSidebar,
+  })))
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {

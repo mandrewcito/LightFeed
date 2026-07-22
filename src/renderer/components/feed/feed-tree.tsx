@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useFeedStore } from '../../stores/feed-store'
 import { useAppStore } from '../../stores/app-store'
+import { useShallow } from 'zustand/shallow'
 import { FeedItem } from './feed-item'
 import { ChevronRight, ChevronDown, FolderOpen, Folder, Plus, Trash2, Pencil, Copy, Download } from 'lucide-react'
 import { ContextMenu } from '../ui/context-menu'
@@ -9,28 +10,37 @@ import { useArticleStore } from '../../stores/article-store'
 import type { FeedWithCategory } from '../../types'
 
 export function FeedTree() {
-  const feeds = useFeedStore((s) => s.feeds)
-  const categories = useFeedStore((s) => s.categories)
-  const unreadCounts = useFeedStore((s) => s.unreadCounts)
-  const selectFeed = useFeedStore((s) => s.selectFeed)
-  const selectCategory = useFeedStore((s) => s.selectCategory)
-  const selectedFeedId = useFeedStore((s) => s.selectedFeedId)
-  const selectedCategoryId = useFeedStore((s) => s.selectedCategoryId)
-  const createCategory = useFeedStore((s) => s.createCategory)
-  const renameCategory = useFeedStore((s) => s.renameCategory)
-  const deleteCategory = useFeedStore((s) => s.deleteCategory)
-  const removeFeed = useFeedStore((s) => s.removeFeed)
-  const moveFeedToCategory = useFeedStore((s) => s.moveFeedToCategory)
-  const toggleSelectFeed = useFeedStore((s) => s.toggleSelectFeed)
-  const clearSelection = useFeedStore((s) => s.clearSelection)
-  const multiSelectedFeedIds = useFeedStore((s) => s.multiSelectedFeedIds)
-  const editingFeedId = useFeedStore((s) => s.editingFeedId)
-  const setEditingFeedId = useFeedStore((s) => s.setEditingFeedId)
-  const renameFeed = useFeedStore((s) => s.renameFeed)
-  const editingCategoryId = useFeedStore((s) => s.editingCategoryId)
-  const setEditingCategoryId = useFeedStore((s) => s.setEditingCategoryId)
-  const selectedView = useFeedStore((s) => s.selectedView)
+  const {
+    feeds, categories, unreadCounts, selectFeed, selectCategory,
+    selectedFeedId, selectedCategoryId, createCategory, renameCategory,
+    deleteCategory, removeFeed, moveFeedToCategory, toggleSelectFeed,
+    clearSelection, multiSelectedFeedIds, editingFeedId, setEditingFeedId,
+    renameFeed, editingCategoryId, setEditingCategoryId, selectedView,
+  } = useFeedStore(useShallow((s) => ({
+    feeds: s.feeds,
+    categories: s.categories,
+    unreadCounts: s.unreadCounts,
+    selectFeed: s.selectFeed,
+    selectCategory: s.selectCategory,
+    selectedFeedId: s.selectedFeedId,
+    selectedCategoryId: s.selectedCategoryId,
+    createCategory: s.createCategory,
+    renameCategory: s.renameCategory,
+    deleteCategory: s.deleteCategory,
+    removeFeed: s.removeFeed,
+    moveFeedToCategory: s.moveFeedToCategory,
+    toggleSelectFeed: s.toggleSelectFeed,
+    clearSelection: s.clearSelection,
+    multiSelectedFeedIds: s.multiSelectedFeedIds,
+    editingFeedId: s.editingFeedId,
+    setEditingFeedId: s.setEditingFeedId,
+    renameFeed: s.renameFeed,
+    editingCategoryId: s.editingCategoryId,
+    setEditingCategoryId: s.setEditingCategoryId,
+    selectedView: s.selectedView,
+  })))
   const loadEntries = useArticleStore((s) => s.loadEntries)
+  const downloading = useArticleStore((s) => s.downloading)
   const expandedCategoryIds = useAppStore((s) => s.expandedCategoryIds)
   const toggleCategoryExpand = useAppStore((s) => s.toggleCategory)
 
@@ -172,6 +182,7 @@ export function FeedTree() {
       label: 'Download news',
       icon: <Download size={14} />,
       action: () => handleDownloadNews(contextMenu.feed),
+      disabled: downloading || !!downloadingFeed,
     },
     {
       label: 'Delete',

@@ -30,8 +30,9 @@ export function Sidebar() {
   const setShowDeleteConfirm = useAppStore((s) => s.setShowDeleteConfirm)
   const [refreshing, setRefreshing] = useState(false)
   const [allCtxMenu, setAllCtxMenu] = useState<{ x: number; y: number } | null>(null)
-  const [downloadingAll, setDownloadingAll] = useState<{ current: number; total: number } | null>(null)
+  const downloading = useArticleStore((s) => s.downloading)
   const downloadAllContent = useArticleStore((s) => s.downloadAllContent)
+  const [downloadProgress, setDownloadProgress] = useState<{ current: number; total: number } | null>(null)
 
   useEffect(() => {
     if (!showDeleteConfirm) return
@@ -56,11 +57,11 @@ export function Sidebar() {
   }
 
   const handleDownloadAll = async () => {
-    setDownloadingAll({ current: 0, total: 0 })
+    setDownloadProgress({ current: 0, total: 0 })
     await downloadAllContent((current, total) => {
-      setDownloadingAll({ current, total })
+      setDownloadProgress({ current, total })
     })
-    setDownloadingAll(null)
+    setDownloadProgress(null)
   }
 
   return (
@@ -112,15 +113,19 @@ export function Sidebar() {
             <span className="text-xs text-zinc-500 dark:text-zinc-400">{totalUnread}</span>
           )}
         </button>
-        {downloadingAll && downloadingAll.total > 0 && (
+        {downloading && (
           <div className="px-2 pt-1">
             <div className="text-[10px] text-zinc-500 dark:text-zinc-400 mb-0.5">
-              Caching... {downloadingAll.current}/{downloadingAll.total} articles
+              {downloadProgress && downloadProgress.total > 0
+                ? `Caching... ${downloadProgress.current}/${downloadProgress.total} articles`
+                : 'Preparing...'}
             </div>
             <div className="w-full h-1 bg-zinc-200 dark:bg-zinc-700 rounded-full overflow-hidden">
               <div
                 className="h-full bg-blue-500 transition-all duration-300"
-                style={{ width: `${(downloadingAll.current / downloadingAll.total) * 100}%` }}
+                style={{ width: downloadProgress && downloadProgress.total > 0
+                  ? `${(downloadProgress.current / downloadProgress.total) * 100}%`
+                  : '0%' }}
               />
             </div>
           </div>
@@ -213,13 +218,14 @@ export function Sidebar() {
           x={allCtxMenu.x}
           y={allCtxMenu.y}
           onClose={() => setAllCtxMenu(null)}
-          items={[
-            {
-              icon: <Download size={14} />,
-              label: 'Download all news',
-              action: handleDownloadAll
-            }
-          ]}
+        items={[
+          {
+            icon: <Download size={14} />,
+            label: 'Download all news',
+            action: handleDownloadAll,
+            disabled: downloading,
+          }
+        ]}
         />
       )}
     </div>

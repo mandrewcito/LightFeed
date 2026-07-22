@@ -6,6 +6,7 @@ interface ContextMenuItem {
   icon: React.ReactNode
   action: () => void
   variant?: 'danger' | 'default'
+  disabled?: boolean
 }
 
 interface ContextMenuProps {
@@ -45,11 +46,16 @@ export function ContextMenu({ x, y, items, onClose }: ContextMenuProps) {
         <button
           key={i}
           onClick={() => {
-            item.action()
-            onClose()
+            if (!item.disabled) {
+              item.action()
+              onClose()
+            }
           }}
+          disabled={item.disabled}
           className={`w-full flex items-center gap-2 px-3 py-1.5 text-sm ${
-            item.variant === 'danger'
+            item.disabled
+              ? 'text-zinc-400 dark:text-zinc-600 cursor-not-allowed'
+              : item.variant === 'danger'
               ? 'text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20'
               : 'text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-700'
           }`}
