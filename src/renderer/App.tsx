@@ -29,7 +29,16 @@ export function App() {
     const unlisten = listen('feeds-refreshed', () => {
       loadUnreadCounts()
     })
-    return () => { unlisten.then(fn => fn()) }
+
+    const unlistenShortcut = listen('toggle-fuzzy-finder', () => {
+      const current = useAppStore.getState().showFuzzyFinder
+      useAppStore.getState().setShowFuzzyFinder(!current)
+    })
+
+    return () => {
+      unlisten.then((fn) => fn())
+      unlistenShortcut.then((fn) => fn())
+    }
   }, [])
 
   return (

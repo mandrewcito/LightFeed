@@ -53,17 +53,6 @@ pub fn reorder_subscription(conn: &Connection, subscription_id: &str, sort_order
     Ok(())
 }
 
-pub fn bulk_reorder_subscriptions(conn: &Connection, items: &[(String, i32)]) -> Result<()> {
-    let tx = conn.unchecked_transaction()?;
-    {
-        let mut stmt = tx.prepare("UPDATE subscriptions SET sort_order = ?1 WHERE id = ?2")?;
-        for (id, order) in items {
-            stmt.execute(params![order, id])?;
-        }
-    }
-    tx.commit()?;
-    Ok(())
-}
 
 pub fn is_feed_used_elsewhere(conn: &Connection, feed_id: &str) -> Result<bool> {
     let count: i32 = conn

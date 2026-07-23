@@ -67,26 +67,6 @@ pub fn get_feed_by_id(conn: &Connection, feed_id: &str) -> Result<Option<Feed>> 
     .optional()
 }
 
-pub fn get_all_feeds(conn: &Connection) -> Result<Vec<Feed>> {
-    let mut stmt = conn.prepare(
-        "SELECT id, url, title, description, site_url, image_url, last_fetched_at, fetch_error, fetch_interval FROM feeds",
-    )?;
-    let rows = stmt.query_map([], |row| {
-        Ok(Feed {
-            id: row.get(0)?,
-            url: row.get(1)?,
-            title: row.get(2)?,
-            description: row.get(3)?,
-            site_url: row.get(4)?,
-            image_url: row.get(5)?,
-            last_fetched_at: row.get(6)?,
-            fetch_error: row.get(7)?,
-            fetch_interval: row.get(8)?,
-        })
-    })?;
-    rows.collect::<Result<Vec<_>>>()
-}
-
 pub fn remove_feed(conn: &Connection, feed_id: &str) -> Result<usize> {
     conn.execute("DELETE FROM feeds WHERE id = ?1", params![feed_id])
 }
