@@ -30,14 +30,8 @@ export function App() {
       loadUnreadCounts()
     })
 
-    const unlistenShortcut = listen('toggle-fuzzy-finder', () => {
-      const current = useAppStore.getState().showFuzzyFinder
-      useAppStore.getState().setShowFuzzyFinder(!current)
-    })
-
     return () => {
       unlisten.then((fn) => fn())
-      unlistenShortcut.then((fn) => fn())
     }
   }, [])
 

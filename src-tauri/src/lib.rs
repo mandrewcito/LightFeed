@@ -18,7 +18,7 @@ pub fn run() {
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_fs::init())
         .plugin(tauri_plugin_updater::Builder::new().build())
-        .plugin(tauri_plugin_global_shortcut::Builder::new().build())
+
         .setup(|app| {
             let app_data_dir = app.path().app_data_dir().expect("Failed to get app data dir");
             std::fs::create_dir_all(&app_data_dir).ok();
@@ -53,18 +53,6 @@ pub fn run() {
             });
 
             info!("LightFeed initialized");
-
-            // Register global shortcut for fuzzy finder
-            use tauri_plugin_global_shortcut::GlobalShortcutExt;
-            let app_handle_clone = app.handle().clone();
-            app.global_shortcut().on_shortcut(
-                "Control+Shift+F",
-                move |_app, _shortcut, event| {
-                    if event.state == tauri_plugin_global_shortcut::ShortcutState::Pressed {
-                        let _ = app_handle_clone.emit("toggle-fuzzy-finder", ());
-                    }
-                },
-            ).expect("Failed to register global shortcut");
 
             Ok(())
         })

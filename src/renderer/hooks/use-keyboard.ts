@@ -105,18 +105,14 @@ export function useKeyboard() {
           document.querySelector<HTMLInputElement>('[placeholder="Search..."]')?.focus()
           break
         case 'f':
-          if ((e.ctrlKey || e.metaKey) && !e.shiftKey) {
-            if (!selectedEntryId) {
-              e.preventDefault()
-              document.querySelector<HTMLInputElement>('[placeholder="Search..."]')?.focus()
-            }
-          }
-          break
         case 'F':
           if (e.ctrlKey || e.metaKey) {
             if (e.shiftKey) {
               e.preventDefault()
               setShowFuzzyFinder(!showFuzzyFinder)
+            } else if (!selectedEntryId) {
+              e.preventDefault()
+              document.querySelector<HTMLInputElement>('[placeholder="Search..."]')?.focus()
             }
           }
           break
